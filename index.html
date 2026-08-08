@@ -23,28 +23,29 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png">
 
-<link rel="stylesheet" href="css/base.css?v=8">
-<link rel="stylesheet" href="css/intro.css?v=8">
-<link rel="stylesheet" href="css/layout.css?v=8">
-<link rel="stylesheet" href="css/components.css?v=8">
-<link rel="stylesheet" href="css/facets.css?v=8">
-<link rel="stylesheet" href="css/responsive.css?v=8">
+<link rel="stylesheet" href="css/base.css?v=9">
+<link rel="stylesheet" href="css/intro.css?v=9">
+<link rel="stylesheet" href="css/layout.css?v=9">
+<link rel="stylesheet" href="css/components.css?v=9">
+<link rel="stylesheet" href="css/facets.css?v=9">
+<link rel="stylesheet" href="css/responsive.css?v=9">
 
 <!-- Script classici con defer, non ES modules: i moduli sono bloccati
      dal protocollo file:// e il sito non si aprirebbe più con un doppio
      click. Con defer il download parte subito ma l'esecuzione avviene a
      parsing finito, quindi non bloccano mai il rendering. L'ordine è
      garantito: i dati prima di chi li usa. -->
-<script defer src="js/icons.js?v=8"></script>
-<script defer src="js/data/catalog.js?v=8"></script>
-<script defer src="js/data/franchises.js?v=8"></script>
-<script defer src="js/storage.js?v=8"></script>
-<script defer src="js/posters.js?v=8"></script>
-<script defer src="js/render.js?v=8"></script>
-<script defer src="js/controls.js?v=8"></script>
-<script defer src="js/ui.js?v=8"></script>
-<script defer src="js/intro.js?v=8"></script>
-<script defer src="js/app.js?v=8"></script>
+<script defer src="js/icons.js?v=9"></script>
+<script defer src="js/data/catalog.js?v=9"></script>
+<script defer src="js/data/franchises.js?v=9"></script>
+<script defer src="js/storage.js?v=9"></script>
+<script defer src="js/posters.js?v=9"></script>
+<script defer src="js/render.js?v=9"></script>
+<script defer src="js/controls.js?v=9"></script>
+<script defer src="js/ui.js?v=9"></script>
+<script defer src="js/intro.js?v=9"></script>
+<script defer src="js/legal.js?v=9"></script>
+<script defer src="js/app.js?v=9"></script>
 </head>
 <body>
 
@@ -142,6 +143,11 @@
   Dati e locandine forniti da <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>. Questo progetto usa le API di TMDB ma non è approvato o certificato da TMDB.<br>
   Fasi MCU, ordine narrativo e tag "Essenziale" sono una curatela editoriale, non un dato ufficiale Marvel.<br>
   Progetto fan non ufficiale — Marvel e i personaggi correlati sono marchi Marvel/Disney.
+  <span class="footer-links">
+    <a href="#" data-open-dialog="privacyDialog">Privacy</a>
+    <span class="footer-sep" aria-hidden="true">·</span>
+    <a href="#" data-open-dialog="termsDialog">Termini di utilizzo</a>
+  </span>
 </footer>
 
 </div><!-- /.site -->
@@ -201,6 +207,193 @@
     <div class="modal-status" id="modalStatus"></div>
   </div>
 </div>
+
+<!-- ============================================================
+     INFORMATIVA SULL'ARCHIVIAZIONE LOCALE
+     Non è un cookie banner: l'app non usa cookie né analytics.
+     Serve a dichiarare che la lista resta sul dispositivo.
+     ============================================================ -->
+<div class="consent" id="consentBanner" role="region" aria-label="Informativa sull'archiviazione locale">
+  <div class="consent-text">
+    <strong>I tuoi dati restano qui.</strong>
+    Questo archivio salva i titoli che segni nella memoria locale del browser,
+    su questo dispositivo. Nessun account, nessun cookie di profilazione,
+    nessun servizio di tracciamento.
+    <a href="#" data-open-dialog="privacyDialog">Dettagli</a>
+  </div>
+  <button class="btn btn-primary btn-sm" id="consentAccept">Ho capito</button>
+</div>
+
+<!-- ============================================================
+     PRIVACY
+     ============================================================ -->
+<dialog class="sheet-dialog" id="privacyDialog" aria-labelledby="privacyTitle">
+  <div class="sheet-dialog-inner">
+    <header class="sheet-dialog-head">
+      <h2 id="privacyTitle">Privacy</h2>
+      <button class="modal-close" data-close-dialog aria-label="Chiudi">&#10005;</button>
+    </header>
+    <div class="sheet-dialog-body">
+      <p class="legal-updated">Ultimo aggiornamento: agosto 2026</p>
+
+      <h3>In breve</h3>
+      <p>
+        Questo sito non raccoglie dati personali, non richiede registrazione e non
+        usa cookie di profilazione, analytics o strumenti pubblicitari. La lista dei
+        titoli che segni come visti o saltati resta memorizzata nel browser, su questo
+        dispositivo, e non viene inviata a nessun server.
+      </p>
+
+      <h3>Cosa viene salvato sul tuo dispositivo</h3>
+      <p>
+        Il sito usa l'archiviazione locale del browser (<em>localStorage</em>) per tre
+        informazioni tecniche, tutte necessarie al funzionamento:
+      </p>
+      <ul>
+        <li>lo stato di ciascun titolo (visto, saltato o da vedere);</li>
+        <li>la preferenza sulla riproduzione del video di apertura;</li>
+        <li>la conferma di aver letto questa informativa.</li>
+      </ul>
+      <p>
+        Non si tratta di cookie e nulla di tutto questo viene trasmesso: resta sul
+        dispositivo finché non lo cancelli tu.
+      </p>
+
+      <h3>Cosa esce dal dispositivo</h3>
+      <p>
+        Per onestà va detto che qualcosa esce, anche senza che tu fornisca dati:
+      </p>
+      <ul>
+        <li>
+          <strong>Locandine.</strong> Le immagini sono caricate dai server di
+          <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
+          (<em>image.tmdb.org</em>). Come accade con qualunque immagine di terze parti,
+          i loro server ricevono la richiesta e quindi il tuo indirizzo IP e il tipo di
+          browser. Vale la
+          <a href="https://www.themoviedb.org/privacy-policy" target="_blank" rel="noopener">privacy policy di TMDB</a>.
+          Dopo la prima visita le locandine sono conservate nella cache del sito e non
+          vengono più richieste.
+        </li>
+        <li>
+          <strong>Hosting.</strong> Il sito è pubblicato su GitHub Pages, che come ogni
+          server web registra log tecnici di accesso. Vale la
+          <a href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">privacy policy di GitHub</a>.
+        </li>
+      </ul>
+
+      <h3>Come cancellare i tuoi dati</h3>
+      <p>
+        Il pulsante <strong>Azzera visti</strong> nel pannello Info svuota la lista.
+        Per rimuovere ogni traccia, cancella i dati del sito dalle impostazioni del
+        browser. Non essendoci alcun archivio lato server, non serve inviare richieste
+        a nessuno: il controllo è interamente tuo. Con <strong>Esporta</strong> puoi
+        conservare una copia della lista prima di cancellarla.
+      </p>
+
+      <h3>Minori</h3>
+      <p>
+        Il sito non raccoglie dati e non è rivolto in modo specifico ai minori. Non
+        essendo raccolta alcuna informazione personale, non è previsto alcun trattamento
+        che richieda il consenso di un genitore.
+      </p>
+
+      <h3>Modifiche e contatti</h3>
+      <p>
+        Trattandosi di un progetto amatoriale, questa informativa può cambiare insieme
+        al sito. Il codice è pubblico su
+        <a href="https://github.com/GxMich/marvel-database" target="_blank" rel="noopener">GitHub</a>:
+        puoi verificare tu stesso cosa fa l'applicazione e segnalare problemi da lì.
+      </p>
+    </div>
+    <footer class="sheet-dialog-foot">
+      <button class="btn btn-primary" data-close-dialog>Chiudi</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- ============================================================
+     TERMINI DI UTILIZZO
+     ============================================================ -->
+<dialog class="sheet-dialog" id="termsDialog" aria-labelledby="termsTitle">
+  <div class="sheet-dialog-inner">
+    <header class="sheet-dialog-head">
+      <h2 id="termsTitle">Termini di utilizzo</h2>
+      <button class="modal-close" data-close-dialog aria-label="Chiudi">&#10005;</button>
+    </header>
+    <div class="sheet-dialog-body">
+      <p class="legal-updated">Ultimo aggiornamento: agosto 2026</p>
+
+      <h3>Progetto non ufficiale</h3>
+      <p>
+        Marvel Database è un progetto amatoriale, senza scopo di lucro, realizzato da un
+        appassionato. <strong>Non è affiliato, associato, autorizzato, approvato né in
+        alcun modo collegato a Marvel Entertainment, Marvel Studios, The Walt Disney
+        Company, Sony Pictures, 20th Century Studios, Netflix o TMDB.</strong>
+      </p>
+      <p>
+        Marvel, i nomi dei personaggi, i titoli delle opere, i loghi e le locandine sono
+        marchi registrati e materiale protetto dei rispettivi titolari. In questo sito
+        compaiono a scopo puramente descrittivo e di catalogazione, per identificare le
+        opere elencate.
+      </p>
+
+      <h3>Fonte dei dati</h3>
+      <p>
+        Le informazioni sulle opere (titoli, date, durate, voti, trame) e le locandine
+        provengono dalle API di
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
+        e sono usate nel rispetto delle loro
+        <a href="https://www.themoviedb.org/api-terms-of-use" target="_blank" rel="noopener">condizioni d'uso</a>.
+      </p>
+      <p class="legal-callout">
+        Questo prodotto usa le API di TMDB ma non è approvato o certificato da TMDB.
+      </p>
+
+      <h3>Accuratezza dei contenuti</h3>
+      <p>
+        La classificazione per universo, franchise, fase e personaggi, l'ordine narrativo
+        e i tag "Essenziale" sono una <strong>curatela editoriale personale</strong>, non
+        un dato ufficiale Marvel: sono opinabili e possono contenere errori o
+        semplificazioni. I dati fattuali provengono da TMDB e possono essere incompleti o
+        non aggiornati. Il sito è fornito così com'è, senza garanzie di accuratezza,
+        completezza o continuità del servizio.
+      </p>
+
+      <h3>Uso consentito</h3>
+      <p>
+        Il sito è destinato all'uso personale come strumento di consultazione e per tenere
+        traccia delle opere viste. Non fornisce, non ospita e non collega contenuti in
+        streaming: le indicazioni sulle piattaforme sono informative e possono variare per
+        paese e nel tempo.
+      </p>
+
+      <h3>I tuoi dati sono responsabilità tua</h3>
+      <p>
+        La lista dei titoli visti risiede unicamente nel tuo browser. Cancellare i dati del
+        sito, cambiare dispositivo o usare la navigazione privata comporta la perdita della
+        lista, senza possibilità di recupero da parte nostra. Usa la funzione
+        <strong>Esporta</strong> per conservarne una copia.
+      </p>
+
+      <h3>Limitazione di responsabilità</h3>
+      <p>
+        Nei limiti consentiti dalla legge, l'autore non è responsabile per danni derivanti
+        dall'uso del sito, incluse la perdita dei dati salvati localmente e l'eventuale
+        indisponibilità del servizio.
+      </p>
+
+      <h3>Segnalazioni</h3>
+      <p>
+        Per correzioni sui contenuti o richieste da parte dei titolari dei diritti, il
+        codice sorgente e i canali di contatto sono su
+        <a href="https://github.com/GxMich/marvel-database" target="_blank" rel="noopener">GitHub</a>.
+      </p>
+    </div>
+    <footer class="sheet-dialog-foot">
+      <button class="btn btn-primary" data-close-dialog>Chiudi</button>
+    </footer>
+  </div>
+</dialog>
 
 </body>
 </html>
