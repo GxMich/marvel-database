@@ -1,0 +1,229 @@
+/* ==========================================================
+   PANNELLO FILTRI
+   Su desktop è una colonna che scorre da destra, su mobile un
+   drawer che sale dal basso. Stesso markup, due comportamenti.
+   ========================================================== */
+.filter-panel-wrap{
+  position:fixed; inset:0;
+  z-index:90;
+  background:rgba(4,4,7,.6);
+  backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);
+  opacity:0; visibility:hidden;
+  transition:opacity .28s ease, visibility .28s ease;
+  display:flex;
+  justify-content:flex-end;
+}
+.filter-panel-wrap.open{opacity:1;visibility:visible}
+body.no-scroll{overflow:hidden}
+
+.filter-sheet{
+  width:min(420px, 100%);
+  height:100%;
+  background:linear-gradient(180deg, var(--bg-alt), var(--bg));
+  border-left:1px solid var(--card-border);
+  display:flex;
+  flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .34s var(--ease-out);
+  padding-top:var(--sat);
+  padding-bottom:var(--sab);
+}
+.filter-panel-wrap.open .filter-sheet{transform:translateX(0)}
+
+.filter-sheet-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--card-border);
+  flex-shrink:0;
+}
+.filter-sheet-head h2{
+  margin:0;
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:.4px;
+  flex:1;
+}
+.filter-sheet-grab{display:none}
+
+.filter-panel{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding:6px 20px 20px;
+}
+
+.filter-sheet-foot{
+  display:flex;
+  gap:10px;
+  padding:14px 20px calc(14px + var(--sab));
+  border-top:1px solid var(--card-border);
+  background:var(--bg-alt);
+  flex-shrink:0;
+}
+.filter-sheet-foot .btn{flex:1;justify-content:center}
+
+/* ---------- gruppi ---------- */
+.fgroup{padding:18px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.fgroup:last-child{border-bottom:none}
+.fgroup-title{
+  margin:0 0 11px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+.fgroup-hint{
+  font-size:11.5px;
+  letter-spacing:.3px;
+  color:var(--gold);
+  text-transform:none;
+  font-weight:600;
+  margin-left:auto;
+}
+.fgroup-opts{display:flex;flex-wrap:wrap;gap:7px}
+/* liste lunghe (franchise, personaggi) non devono allungare il pannello */
+.fgroup-opts.is-scroll{
+  max-height:186px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:4px;
+  align-content:flex-start;
+}
+
+.fchip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 12px;
+  min-height:36px;
+  border-radius:9px;
+  border:1px solid var(--card-border);
+  background:rgba(255,255,255,.03);
+  color:var(--text-dim);
+  font-size:13px;
+  font-family:inherit;
+  cursor:pointer;
+  transition:background .18s ease, border-color .18s ease, color .18s ease;
+  text-align:left;
+}
+.fchip:hover{border-color:#4a4a58;color:var(--text)}
+.fchip.active{
+  background:rgba(237,29,36,.14);
+  border-color:var(--red);
+  color:#fff;
+}
+.fchip-n{
+  font-size:10.5px;
+  font-weight:700;
+  padding:1px 6px;
+  border-radius:99px;
+  background:rgba(255,255,255,.08);
+  color:var(--text-dim);
+}
+.fchip.active .fchip-n{background:rgba(255,255,255,.16);color:#fff}
+
+/* ---------- range anni ---------- */
+.year-range{display:flex;flex-direction:column;gap:10px;padding-top:2px}
+.year-range input[type="range"]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:4px;
+  border-radius:99px;
+  background:#2a2a34;
+  outline:none;
+}
+.year-range input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:18px; height:18px;
+  border-radius:50%;
+  background:var(--red);
+  border:2px solid #fff;
+  cursor:pointer;
+  transition:transform .15s ease;
+}
+.year-range input[type="range"]::-webkit-slider-thumb:active{transform:scale(1.18)}
+.year-range input[type="range"]::-moz-range-thumb{
+  width:16px; height:16px;
+  border-radius:50%;
+  background:var(--red);
+  border:2px solid #fff;
+  cursor:pointer;
+}
+
+/* ---------- bottone filtri + contatore ---------- */
+.btn-filter{position:relative}
+.filter-badge{
+  display:none;
+  min-width:19px; height:19px;
+  border-radius:99px;
+  background:var(--red);
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  align-items:center;
+  justify-content:center;
+  padding:0 5px;
+}
+.filter-badge.show{display:inline-flex}
+
+/* ---------- barra risultati ---------- */
+.quickbar{
+  max-width:1280px;
+  margin:14px auto 0;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.quickbar-chips{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.quickbar-meta{display:flex;align-items:center;gap:12px;margin-left:auto}
+.result-count{
+  font-size:12.5px;
+  color:var(--text-dim);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.btn-sm{padding:8px 12px;font-size:12.5px}
+
+@media (max-width:640px){
+  /* drawer dal basso: più raggiungibile col pollice */
+  .filter-panel-wrap{align-items:flex-end;justify-content:center}
+  .filter-sheet{
+    width:100%;
+    height:88vh;
+    height:88dvh;
+    border-left:none;
+    border-top:1px solid var(--card-border);
+    border-radius:20px 20px 0 0;
+    transform:translateY(100%);
+  }
+  .filter-panel-wrap.open .filter-sheet{transform:translateY(0)}
+  .filter-sheet-grab{
+    display:block;
+    position:absolute;
+    top:8px; left:50%;
+    transform:translateX(-50%);
+    width:38px; height:4px;
+    border-radius:99px;
+    background:#3a3a46;
+  }
+  .filter-sheet-head{padding-top:22px}
+  .fgroup-opts.is-scroll{max-height:none;overflow:visible}
+  .fchip{min-height:40px;font-size:13.5px}
+  .quickbar{padding:0 13px;gap:10px}
+  .quickbar-chips{width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .quickbar-chips::-webkit-scrollbar{display:none}
+  .quickbar-chips .chip{white-space:nowrap;flex-shrink:0}
+  .quickbar-meta{width:100%;margin-left:0;justify-content:space-between}
+}

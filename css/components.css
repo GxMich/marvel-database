@@ -1,0 +1,407 @@
+/* ---------- grid ---------- */
+.grid{
+  max-width:1200px;
+  margin:30px auto 80px;
+  padding:0 20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:22px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  cursor:pointer;
+  position:relative;
+  transform:translateY(0) scale(1);
+  transition:transform .35s cubic-bezier(.22,.9,.3,1.2), box-shadow .35s ease, border-color .3s, opacity .3s ease;
+  opacity:0;
+  animation:cardIn .55s ease forwards;
+  animation-delay:calc(var(--i) * 28ms);
+}
+@keyframes cardIn{
+  from{opacity:0; transform:translateY(24px) scale(.94)}
+  to{opacity:1; transform:translateY(0) scale(1)}
+}
+.card:hover{
+  transform:translateY(-8px) scale(1.03);
+  box-shadow:0 18px 40px rgba(0,0,0,.5);
+  border-color:var(--red);
+  z-index:2;
+}
+.card:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.card.watched{border-color:rgba(46,204,113,.5)}
+.card.skipped{border-color:rgba(138,138,149,.5);opacity:.72}
+.card.skipped:hover{opacity:1}
+
+.poster{
+  position:relative;
+  aspect-ratio:2/3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.poster-img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  opacity:0;
+  transform:scale(1.08);
+  transition:opacity .55s ease, transform .7s cubic-bezier(.22,.9,.3,1.1);
+  z-index:0;
+}
+.poster.loaded .poster-img{opacity:1;transform:scale(1)}
+.poster.loaded .icon{opacity:0;transform:scale(.7)}
+.poster .icon{
+  font-size:54px;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));
+  transition:transform .4s ease, opacity .4s ease;
+  position:relative;
+  z-index:1;
+}
+.card:hover .poster .icon{transform:scale(1.15) rotate(-4deg)}
+.poster::after{
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(180deg,transparent 40%, rgba(0,0,0,.75) 100%);
+  z-index:1;
+  transition:background .4s ease;
+}
+.poster.loaded::after{background:linear-gradient(180deg,transparent 52%, rgba(0,0,0,.88) 100%)}
+.poster .sheen{
+  position:absolute; inset:0;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);
+  transform:translateX(-120%);
+  transition:transform .7s ease;
+  z-index:2;
+}
+.card:hover .sheen{transform:translateX(120%)}
+
+.badge-topleft{
+  position:absolute; top:8px; left:8px;
+  display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+  z-index:3;
+}
+.badge-topright{
+  position:absolute; top:8px; right:8px;
+  z-index:3;
+}
+.badge{
+  font-size:10px;
+  font-weight:700;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);
+  color:#fff;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  white-space:nowrap;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.badge-type{background:rgba(237,29,36,.8)}
+.badge-type.is-anim{background:rgba(109,40,217,.85)}
+.badge-upcoming{background:linear-gradient(135deg,var(--gold),#c98d1f);color:#1a1200}
+.badge-rating{
+  background:rgba(0,0,0,.62);
+  color:var(--gold);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:0;
+}
+.badge-rating .icon-svg{width:11px;height:11px}
+
+.status-actions{
+  position:absolute; bottom:8px; right:8px;
+  display:flex; gap:6px;
+  z-index:4;
+}
+.status-btn{
+  width:28px; height:28px;
+  border-radius:50%;
+  background:rgba(20,20,26,.75);
+  border:2px solid rgba(255,255,255,.35);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff;
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+}
+.status-btn .icon-svg{width:14px;height:14px}
+.status-btn:hover{transform:scale(1.18)}
+.status-btn.watch.active{background:var(--green);border-color:var(--green)}
+.status-btn.skip.active{background:var(--gray);border-color:var(--gray)}
+
+.poster-title{
+  position:absolute; bottom:9px; left:10px; right:78px;
+  z-index:3;
+  font-weight:700;
+  font-size:13px;
+  color:#fff;
+  line-height:1.25;
+  text-shadow:0 2px 6px rgba(0,0,0,.6);
+}
+
+.card-body{
+  padding:12px 14px 14px;
+}
+.card-meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:11.5px;
+  color:var(--text-dim);
+  margin-bottom:6px;
+}
+.card-year{font-variant-numeric:tabular-nums}
+.card-universe{
+  font-size:10px;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--text-dim);
+  padding:2px 7px;
+  border:1px solid var(--card-border);
+  border-radius:99px;
+  white-space:nowrap;
+}
+.card-franchise{
+  font-size:11.5px;
+  color:var(--gold);
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.card.watched::before{
+  content:"VISTO";
+  position:absolute;
+  top:14px; left:-30px;
+  background:var(--green);
+  color:#06210f;
+  font-size:10px;
+  font-weight:800;
+  padding:3px 34px;
+  transform:rotate(-38deg);
+  z-index:5;
+  letter-spacing:1px;
+  box-shadow:0 3px 10px rgba(0,0,0,.4);
+}
+.card.skipped::before{
+  content:"SALTATO";
+  position:absolute;
+  top:14px; left:-34px;
+  background:var(--gray);
+  color:#151519;
+  font-size:10px;
+  font-weight:800;
+  padding:3px 34px;
+  transform:rotate(-38deg);
+  z-index:5;
+  letter-spacing:1px;
+  box-shadow:0 3px 10px rgba(0,0,0,.4);
+}
+
+.empty-state{
+  grid-column:1/-1;
+  text-align:center;
+  padding:70px 20px;
+  color:var(--text-dim);
+  animation:fadeUp .5s ease both;
+}
+.empty-state .icon-svg{width:46px;height:46px;display:block;margin:0 auto 14px;opacity:.45}
+.empty-state p{margin:0 0 16px;font-size:14px}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;
+  bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(120%);
+  background:linear-gradient(135deg,var(--card),var(--bg-alt));
+  border:1px solid var(--card-border);
+  padding:14px 22px;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  z-index:50;
+  display:flex; align-items:center; gap:10px;
+  transition:transform .4s cubic-bezier(.22,.9,.3,1.2);
+  font-size:14px;
+  max-width:90vw;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+/* ---------- poster fetch progress pill ---------- */
+.poster-progress{
+  position:fixed;
+  left:20px; bottom:20px;
+  display:flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg,var(--card),var(--bg-alt));
+  border:1px solid var(--card-border);
+  padding:10px 16px;
+  border-radius:999px;
+  font-size:12.5px;
+  color:var(--text-dim);
+  box-shadow:var(--shadow);
+  opacity:0; pointer-events:none;
+  transform:translateY(10px);
+  transition:all .3s ease;
+  z-index:45;
+}
+.poster-progress.show{opacity:1;transform:translateY(0)}
+
+/* ---------- modal ---------- */
+.modal-backdrop{
+  position:fixed; inset:0;
+  background:rgba(4,4,7,.72);
+  backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center;
+  z-index:100;
+  opacity:0; pointer-events:none;
+  transition:opacity .3s ease;
+  padding:20px;
+}
+.modal-backdrop.show{opacity:1;pointer-events:auto}
+.modal{
+  background:linear-gradient(160deg,var(--card),var(--bg-alt));
+  border:1px solid var(--card-border);
+  border-radius:20px;
+  padding:28px;
+  max-width:460px;
+  width:100%;
+  position:relative;
+  box-shadow:0 30px 70px rgba(0,0,0,.6);
+  transform:translateY(24px) scale(.96);
+  transition:transform .35s cubic-bezier(.22,.9,.3,1.2);
+}
+.modal-backdrop.show .modal{transform:translateY(0) scale(1)}
+.modal h2{
+  margin:0 0 12px;
+  font-size:19px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#fff;
+}
+.modal p{color:var(--text-dim);font-size:13.5px;line-height:1.6;margin:0 0 16px}
+.modal label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+.modal input[type="text"]{
+  width:100%;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid var(--card-border);
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.modal input[type="text"]:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(237,29,36,.18)}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.modal-status{margin-top:14px;font-size:12.5px;color:var(--gold);min-height:16px}
+.modal-close{
+  position:absolute; top:16px; right:16px;
+  width:32px; height:32px;
+  border-radius:50%;
+  border:1px solid var(--card-border);
+  background:transparent;
+  color:var(--text);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.modal-close:hover{background:rgba(237,29,36,.15);border-color:var(--red);transform:rotate(90deg)}
+
+.modal-stat-row{display:flex;gap:12px;margin:0 0 18px}
+.modal-stat{
+  flex:1;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+}
+.modal-stat-num{font-size:22px;font-weight:800;color:var(--gold)}
+.modal-stat-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-top:2px}
+
+/* toggle intro */
+.switch-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+  cursor:pointer;
+  font-size:13.5px;
+  color:var(--text);
+  text-transform:none;
+  letter-spacing:0;
+  margin:0;
+}
+.switch-row input{position:absolute;opacity:0;width:0;height:0}
+.switch{
+  position:relative;
+  width:44px; height:26px;
+  border-radius:99px;
+  background:#33333f;
+  flex-shrink:0;
+  transition:background .25s ease;
+}
+.switch::after{
+  content:"";
+  position:absolute;
+  top:3px; left:3px;
+  width:20px; height:20px;
+  border-radius:50%;
+  background:#fff;
+  transition:transform .28s var(--ease-spring);
+}
+.switch-row input:checked ~ .switch{background:var(--green)}
+.switch-row input:checked ~ .switch::after{transform:translateX(18px)}
+
+/* ---------- footer ---------- */
+footer{
+  text-align:center;
+  padding:26px 16px calc(40px + var(--sab));
+  color:var(--text-dim);
+  font-size:12.5px;
+  line-height:1.7;
+}
+
+/* ---------- scroll top ---------- */
+.scrolltop{
+  position:fixed;
+  right:calc(20px + var(--sar));
+  bottom:calc(20px + var(--sab));
+  width:48px; height:48px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));
+  color:#fff;
+  border:none;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(237,29,36,.4);
+  opacity:0; pointer-events:none;
+  transform:translateY(20px) scale(.8);
+  transition:all .3s var(--ease-spring);
+  z-index:40;
+}
+.scrolltop.show{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
+.scrolltop:hover{transform:translateY(-4px) scale(1.08)}
+.scrolltop:active{transform:scale(.92)}
+
+/* ---------- performance ----------
+   Le card fuori schermo non vengono disegnate finché non servono.
+   contain-intrinsic-size evita che la scrollbar "salti". */
+.card{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 340px;
+}
+.card.is-hidden{display:none}
+/* immagini: niente reflow durante il caricamento */
+.poster-img{background:transparent}

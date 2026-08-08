@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0f">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Archivio completo dei film e delle serie TV Marvel: MCU, Sony, Fox, Netflix e animazione.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Marvel Database">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+<link rel="dns-prefetch" href="https://image.tmdb.org">
+<title>Marvel Database — Film, serie e animazione</title>
+<link rel="stylesheet" href="css/base.css?v=2">
+<link rel="stylesheet" href="css/intro.css?v=2">
+<link rel="stylesheet" href="css/layout.css?v=2">
+<link rel="stylesheet" href="css/components.css?v=2">
+<link rel="stylesheet" href="css/facets.css?v=2">
+<link rel="stylesheet" href="css/responsive.css?v=2">
+</head>
+<body>
+
+<div class="intro" id="intro">
+  <video id="introVideo" muted playsinline autoplay preload="auto" disablepictureinpicture>
+    <source src="assets/video/marvel-intro.mp4" type="video/mp4">
+  </video>
+  <div class="intro-vignette"></div>
+  <button class="intro-skip" id="introSkip">SALTA <span id="introSkipIcon"></span></button>
+  <div class="intro-loader">
+    <div class="intro-loader-track"><div class="intro-loader-fill" id="introLoaderFill"></div></div>
+    <div class="intro-loader-text" id="introLoaderText">Caricamento archivio…</div>
+  </div>
+</div>
+
+<div class="site" id="site">
+
+<header class="hero">
+  <div class="brand"><span class="spark" id="sparkLeft"></span> MARVEL DATABASE <span class="spark" id="sparkRight"></span></div>
+  <p class="tagline">Film, serie TV e animazione — MCU, Sony, Fox, Netflix e oltre.</p>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Titoli</div></div>
+    <div class="stat-card"><div class="stat-num" id="statMovies">0</div><div class="stat-label">Film</div></div>
+    <div class="stat-card"><div class="stat-num" id="statSeries">0</div><div class="stat-label">Serie</div></div>
+    <div class="stat-card"><div class="stat-num" id="statWatched">0</div><div class="stat-label">Visti</div></div>
+    <div class="stat-card"><div class="stat-num" id="statSkipped">0</div><div class="stat-label">Saltati</div></div>
+    <div class="stat-card"><div class="stat-num" id="statRemaining">0</div><div class="stat-label">Da vedere</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label">Completamento: <b id="progressPct">0%</b></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-box">
+    <span class="search-icon" id="searchIconSlot"></span>
+    <input type="search" id="searchInput" placeholder="Cerca titolo, personaggio, franchise, anno…" autocomplete="off">
+  </div>
+  <div class="select-wrap">
+    <select id="sortSelect" aria-label="Ordinamento">
+      <option value="chrono">Anno di uscita</option>
+      <option value="story">Ordine narrativo MCU</option>
+      <option value="rating">Voto più alto</option>
+      <option value="title">Titolo (A-Z)</option>
+      <option value="year-desc">Più recenti</option>
+      <option value="watched">Stato visione</option>
+    </select>
+    <span class="select-chevron" id="chevronSort"></span>
+  </div>
+  <button class="btn btn-filter" id="filterToggle"></button>
+  <div class="controls-actions">
+    <button class="btn btn-primary" id="exportBtn"></button>
+    <button class="btn btn-gold" id="importBtn"></button>
+    <button class="btn btn-ghost btn-settings" id="settingsBtn"></button>
+  </div>
+  <input type="file" id="fileInput" accept="application/json">
+</div>
+
+<div class="quickbar">
+  <div class="quickbar-chips">
+    <div class="chip" data-filter-watch="unwatched" id="chipUnwatched">Da vedere</div>
+    <div class="chip" data-filter-watch="watched" id="chipWatched">Visti</div>
+    <div class="chip" data-filter-watch="skipped" id="chipSkippedFilter">Saltati</div>
+    <div class="chip chip-gold" id="chipEssential">Essenziali MCU</div>
+  </div>
+  <div class="quickbar-meta">
+    <span class="result-count" id="resultCount">0 titoli</span>
+    <button class="btn btn-ghost btn-sm" id="resetBtn"></button>
+  </div>
+</div>
+
+<main class="grid" id="grid"></main>
+
+<footer>
+  I titoli segnati come visti restano salvati in questo browser. Usa <b>Esporta</b> per un backup e <b>Importa</b> per ripristinarlo altrove.<br>
+  Dati e locandine forniti da <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>. Questo progetto usa le API di TMDB ma non è approvato o certificato da TMDB.<br>
+  Fasi MCU, ordine narrativo e tag "Essenziale" sono una curatela editoriale, non un dato ufficiale Marvel.<br>
+  Progetto fan non ufficiale — Marvel e i personaggi correlati sono marchi Marvel/Disney.
+</footer>
+
+</div><!-- /.site -->
+
+<!-- pannello filtri: colonna laterale su desktop, drawer dal basso su mobile -->
+<div class="filter-panel-wrap" id="filterPanelWrap">
+  <aside class="filter-sheet" role="dialog" aria-modal="true" aria-label="Filtri">
+    <header class="filter-sheet-head">
+      <span class="filter-sheet-grab"></span>
+      <h2>Filtri</h2>
+      <button class="modal-close" id="filterCloseBtn" aria-label="Chiudi filtri"></button>
+    </header>
+    <div class="filter-panel" id="filterPanel"></div>
+    <footer class="filter-sheet-foot">
+      <button class="btn btn-ghost" id="filterResetBtn">Azzera filtri</button>
+      <button class="btn btn-primary" id="filterApplyBtn">Vedi risultati</button>
+    </footer>
+  </aside>
+</div>
+
+<button class="scrolltop" id="scrollTopBtn" aria-label="Torna su"></button>
+<div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalCloseBtn" aria-label="Chiudi"></button>
+    <h2 id="modalTitle"><span id="modalTitleIcon"></span> L'archivio</h2>
+    <p>
+      Un catalogo Marvel che va oltre l'MCU: include Sony, Fox, le serie Netflix,
+      i film TV storici e tutta l'animazione. Dati e locandine arrivano da TMDB e
+      sono già inclusi nel progetto, quindi la pagina si apre senza attese.
+    </p>
+    <div class="modal-stat-row">
+      <div class="modal-stat"><div class="modal-stat-num" id="modalTotalNum">0</div><div class="modal-stat-lbl">Titoli</div></div>
+      <div class="modal-stat"><div class="modal-stat-num" id="modalMoviesNum">0</div><div class="modal-stat-lbl">Film</div></div>
+      <div class="modal-stat"><div class="modal-stat-num" id="modalSeriesNum">0</div><div class="modal-stat-lbl">Serie</div></div>
+      <div class="modal-stat"><div class="modal-stat-num" id="modalUniverseNum">0</div><div class="modal-stat-lbl">Universi</div></div>
+    </div>
+    <label class="switch-row" for="introToggle">
+      <span>Mostra il video di intro all'avvio</span>
+      <input type="checkbox" id="introToggle" checked>
+      <span class="switch"></span>
+    </label>
+    <div class="modal-status" id="modalStatus"></div>
+  </div>
+</div>
+
+<!-- Script classici (non ES modules): i moduli sono bloccati dal
+     protocollo file://, così il sito si apre con un doppio click. -->
+<script src="js/icons.js?v=2"></script>
+<script src="js/data/catalog.js?v=2"></script>
+<script src="js/data/franchises.js?v=2"></script>
+<script src="js/storage.js?v=2"></script>
+<script src="js/posters.js?v=2"></script>
+<script src="js/render.js?v=2"></script>
+<script src="js/controls.js?v=2"></script>
+<script src="js/ui.js?v=2"></script>
+<script src="js/intro.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# file di sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# editor
+.vscode/
+.idea/
+*.swp
+
+# eventuali dipendenze future
+node_modules/
+
+# backup esportati dall'app
+marvel-watchlist-backup-*.json

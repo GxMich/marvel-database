@@ -1,0 +1,58 @@
+:root{
+  --bg:#0b0b0f;
+  --bg-alt:#131319;
+  --card:#17171f;
+  --card-border:#26262f;
+  --red:#ed1d24;
+  --red-dark:#a8121a;
+  --gold:#f5b942;
+  --text:#f4f4f6;
+  --text-dim:#9a9aa5;
+  --green:#2ecc71;
+  --gray:#8a8a95;
+  --radius:16px;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  /* safe area iOS (notch / dynamic island / home indicator) */
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --ease-out:cubic-bezier(.22,.9,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{
+  scroll-behavior:smooth;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{
+  margin:0;
+  font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'SF Pro Text',Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(237,29,36,.25), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(245,185,66,.08), transparent),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--text);
+  min-height:100vh;
+  min-height:100dvh;
+  overflow-x:hidden;
+  overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding-left:var(--sal);
+  padding-right:var(--sar);
+}
+/* niente flash grigio al tap su Android/iOS + niente delay 300ms */
+a,button,select,input,.card,.chip,.status-btn,.stat-card{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.card,.chip,.status-btn,.badge,.brand,.stat-label{
+  -webkit-user-select:none;
+  user-select:none;
+}
+::selection{background:var(--red);color:#fff}
+a{color:var(--gold)}
+
