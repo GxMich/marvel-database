@@ -6,7 +6,6 @@ const introEl    = document.getElementById('intro');
 const introVideo = document.getElementById('introVideo');
 const siteEl     = document.getElementById('site');
 const introFill  = document.getElementById('introLoaderFill');
-const introText  = document.getElementById('introLoaderText');
 let introClosed  = false;
 
 function shouldShowIntro(){ return localStorage.getItem(INTRO_PREF_LS) !== '0'; }
@@ -27,10 +26,11 @@ function dismissIntroImmediately(){
   siteEl.classList.add('reveal');
 }
 
-function setIntroProgress(pct, label){
+/* L'avanzamento si legge dalla sola barra: niente testo di caricamento,
+   il carico visivo lo raccontano gli skeleton nella griglia. */
+function setIntroProgress(pct){
   if(!introFill || introClosed) return;
   introFill.style.width = Math.min(100, Math.round(pct)) + '%';
-  if(label && introText) introText.textContent = label;
 }
 
 document.getElementById('introSkip').addEventListener('click', closeIntro);

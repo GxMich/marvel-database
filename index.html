@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0f">
+<meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <meta name="description" content="Archivio completo dei film e delle serie TV Marvel: MCU, Sony, Fox, Netflix e animazione.">
 <meta name="mobile-web-app-capable" content="yes">
@@ -11,27 +11,54 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Marvel Database">
 <meta name="format-detection" content="telephone=no">
+<title>Marvel Database — Film, serie e animazione</title>
+
+<!-- La connessione a TMDB si apre subito: quando parte la prima
+     locandina, DNS, TCP e TLS sono già stati risolti. -->
 <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
 <link rel="dns-prefetch" href="https://image.tmdb.org">
-<title>Marvel Database — Film, serie e animazione</title>
-<link rel="stylesheet" href="css/base.css?v=2">
-<link rel="stylesheet" href="css/intro.css?v=2">
-<link rel="stylesheet" href="css/layout.css?v=2">
-<link rel="stylesheet" href="css/components.css?v=2">
-<link rel="stylesheet" href="css/facets.css?v=2">
-<link rel="stylesheet" href="css/responsive.css?v=2">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png">
+
+<link rel="stylesheet" href="css/base.css?v=8">
+<link rel="stylesheet" href="css/intro.css?v=8">
+<link rel="stylesheet" href="css/layout.css?v=8">
+<link rel="stylesheet" href="css/components.css?v=8">
+<link rel="stylesheet" href="css/facets.css?v=8">
+<link rel="stylesheet" href="css/responsive.css?v=8">
+
+<!-- Script classici con defer, non ES modules: i moduli sono bloccati
+     dal protocollo file:// e il sito non si aprirebbe più con un doppio
+     click. Con defer il download parte subito ma l'esecuzione avviene a
+     parsing finito, quindi non bloccano mai il rendering. L'ordine è
+     garantito: i dati prima di chi li usa. -->
+<script defer src="js/icons.js?v=8"></script>
+<script defer src="js/data/catalog.js?v=8"></script>
+<script defer src="js/data/franchises.js?v=8"></script>
+<script defer src="js/storage.js?v=8"></script>
+<script defer src="js/posters.js?v=8"></script>
+<script defer src="js/render.js?v=8"></script>
+<script defer src="js/controls.js?v=8"></script>
+<script defer src="js/ui.js?v=8"></script>
+<script defer src="js/intro.js?v=8"></script>
+<script defer src="js/app.js?v=8"></script>
 </head>
 <body>
 
 <div class="intro" id="intro">
-  <video id="introVideo" muted playsinline autoplay preload="auto" disablepictureinpicture>
+  <!-- preload="metadata": del video (8 MB) si scarica solo l'intestazione,
+       il resto arriva in streaming mentre scorre. Con preload="auto"
+       competeva con CSS e locandine per la banda del primo caricamento. -->
+  <video id="introVideo" muted playsinline autoplay preload="metadata" disablepictureinpicture>
     <source src="assets/video/marvel-intro.mp4" type="video/mp4">
   </video>
   <div class="intro-vignette"></div>
   <button class="intro-skip" id="introSkip">SALTA <span id="introSkipIcon"></span></button>
   <div class="intro-loader">
     <div class="intro-loader-track"><div class="intro-loader-fill" id="introLoaderFill"></div></div>
-    <div class="intro-loader-text" id="introLoaderText">Caricamento archivio…</div>
   </div>
 </div>
 
@@ -56,12 +83,15 @@
   </div>
 </header>
 
+<!-- barra appiccicata: resta in cima e sfoca ciò che le scorre sotto -->
+<div class="topbar" id="topbar">
 <div class="controls">
   <div class="search-box">
     <span class="search-icon" id="searchIconSlot"></span>
     <input type="search" id="searchInput" placeholder="Cerca titolo, personaggio, franchise, anno…" autocomplete="off">
   </div>
   <div class="select-wrap">
+    <span class="select-icon" id="sortIconSlot" aria-hidden="true"></span>
     <select id="sortSelect" aria-label="Ordinamento">
       <option value="chrono">Anno di uscita</option>
       <option value="story">Ordine narrativo MCU</option>
@@ -72,13 +102,8 @@
     </select>
     <span class="select-chevron" id="chevronSort"></span>
   </div>
-  <button class="btn btn-filter" id="filterToggle"></button>
-  <div class="controls-actions">
-    <button class="btn btn-primary" id="exportBtn"></button>
-    <button class="btn btn-gold" id="importBtn"></button>
-    <button class="btn btn-ghost btn-settings" id="settingsBtn"></button>
-  </div>
-  <input type="file" id="fileInput" accept="application/json">
+  <button class="btn btn-filter" id="filterToggle" aria-label="Filtri"></button>
+  <button class="btn btn-ghost btn-settings" id="settingsBtn" aria-label="Informazioni e backup"></button>
 </div>
 
 <div class="quickbar">
@@ -90,14 +115,30 @@
   </div>
   <div class="quickbar-meta">
     <span class="result-count" id="resultCount">0 titoli</span>
-    <button class="btn btn-ghost btn-sm" id="resetBtn"></button>
   </div>
 </div>
+</div><!-- /.topbar -->
 
-<main class="grid" id="grid"></main>
+<!-- Card fantasma: sono già nell'HTML, quindi compaiono al primo paint
+     senza aspettare il JavaScript. buildCards() le sostituisce con le
+     card vere. Hanno le stesse proporzioni, così il layout non salta. -->
+<main class="grid" id="grid">
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+</main>
 
 <footer>
-  I titoli segnati come visti restano salvati in questo browser. Usa <b>Esporta</b> per un backup e <b>Importa</b> per ripristinarlo altrove.<br>
+  I titoli segnati restano salvati in questo browser. Backup ed esportazione si trovano nel pannello <b>Info</b>, in alto a destra.<br>
   Dati e locandine forniti da <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>. Questo progetto usa le API di TMDB ma non è approvato o certificato da TMDB.<br>
   Fasi MCU, ordine narrativo e tag "Essenziale" sono una curatela editoriale, non un dato ufficiale Marvel.<br>
   Progetto fan non ufficiale — Marvel e i personaggi correlati sono marchi Marvel/Disney.
@@ -144,21 +185,22 @@
       <input type="checkbox" id="introToggle" checked>
       <span class="switch"></span>
     </label>
+
+    <h3 class="modal-subtitle">Backup della tua lista</h3>
+    <p class="modal-note">
+      I titoli segnati restano su questo dispositivo. Esporta un file JSON per
+      conservarli o spostarli su un altro browser.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="exportBtn"></button>
+      <button class="btn btn-gold" id="importBtn"></button>
+    </div>
+    <input type="file" id="fileInput" accept="application/json">
+    <button class="btn btn-ghost btn-danger" id="resetBtn"></button>
+
     <div class="modal-status" id="modalStatus"></div>
   </div>
 </div>
 
-<!-- Script classici (non ES modules): i moduli sono bloccati dal
-     protocollo file://, così il sito si apre con un doppio click. -->
-<script src="js/icons.js?v=2"></script>
-<script src="js/data/catalog.js?v=2"></script>
-<script src="js/data/franchises.js?v=2"></script>
-<script src="js/storage.js?v=2"></script>
-<script src="js/posters.js?v=2"></script>
-<script src="js/render.js?v=2"></script>
-<script src="js/controls.js?v=2"></script>
-<script src="js/ui.js?v=2"></script>
-<script src="js/intro.js?v=2"></script>
-<script src="js/app.js?v=2"></script>
 </body>
 </html>

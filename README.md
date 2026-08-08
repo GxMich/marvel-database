@@ -11,12 +11,16 @@ Nessuna installazione, nessun server: **apri `index.html` con un doppio click**.
 ```
 marvel/
 ├── index.html                  # markup della pagina
-├── assets/video/               # video di intro
+├── manifest.json               # PWA: nome, icone, colori
+├── sw.js                       # service worker: cache e funzionamento offline
+├── assets/
+│   ├── icons/                  # icone PWA — GENERATE da tools/make-icons.mjs
+│   └── video/                  # video di intro
 ├── css/
-│   ├── base.css                # reset, variabili colore, safe-area iOS
+│   ├── base.css                # design system: colori, spazio, tipografia, ombre, movimento
 │   ├── intro.css               # schermata di apertura
-│   ├── layout.css              # hero, statistiche, controlli
-│   ├── components.css          # card, badge, modale, toast
+│   ├── layout.css              # hero, barra appiccicata in vetro, controlli
+│   ├── components.css          # card, badge, skeleton, modale, toast
 │   ├── facets.css              # pannello filtri (desktop + drawer mobile)
 │   └── responsive.css          # performance e adattamento mobile
 ├── js/
@@ -30,10 +34,29 @@ marvel/
 │   ├── controls.js             # pannello filtri, export/import
 │   ├── ui.js                   # modale, toast, torna-su, icone
 │   ├── intro.js                # video di apertura
-│   └── app.js                  # sequenza di avvio
+│   └── app.js                  # avvio + registrazione service worker
 └── tools/
     ├── master-list.mjs         # tassonomia curata a mano
-    └── build-catalog.mjs       # genera catalog.js incrociando con TMDB
+    ├── build-catalog.mjs       # genera catalog.js incrociando con TMDB
+    └── make-icons.mjs          # genera le icone PWA (PNG, senza dipendenze)
+```
+
+## PWA e funzionamento offline
+
+Il service worker tiene due cache separate, perché i contenuti hanno vite diverse:
+
+- **`marvel-shell-<versione>`** — HTML, CSS, JS, icone. Si svuota quando cambia
+  `VERSION` in `sw.js`. Strategia *stale-while-revalidate*: la pagina si apre dalla
+  cache e la versione nuova arriva in sottofondo.
+- **`marvel-media`** — locandine TMDB e video di intro. Non cambiano mai e pesano
+  molto, quindi sopravvivono ai rilasci. Strategia *cache-first*.
+
+Dopo la prima visita l'archivio funziona **completamente offline**, locandine incluse.
+
+Per rigenerare le icone dopo un cambio di logo:
+
+```bash
+node tools/make-icons.mjs
 ```
 
 ## Come si aggiorna il catalogo
@@ -79,10 +102,13 @@ I contenuti non ancora usciti sono marcati **In arrivo** e non hanno voto invent
 
 ## Note tecniche
 
-- Gli script sono `<script>` classici, **non ES modules**: i moduli vengono bloccati dal
-  protocollo `file://` e il sito non si aprirebbe più con un doppio click.
-- I link a CSS e JS hanno un `?v=N`: se modifichi un file e il browser mostra ancora la
-  versione vecchia, incrementa quel numero in `index.html` (oppure ricarica con Ctrl+Shift+R).
+- Gli script sono `<script defer>` classici, **non ES modules**: i moduli vengono bloccati
+  dal protocollo `file://` e il sito non si aprirebbe più con un doppio click. Con `defer`
+  il download parte subito ma l'esecuzione attende la fine del parsing, quindi non bloccano
+  mai il rendering.
+- **Quando modifichi CSS o JS aggiorna due numeri**: il `?v=N` nei link dentro `index.html`
+  (cache del browser) e la costante `VERSION` in `sw.js` (cache del service worker).
+  Altrimenti chi ha già visitato il sito continuerà a vedere la versione vecchia.
 - Il foglio di stile dei filtri si chiama `facets.css` e non `filters.css` perché gli
   ad-blocker bloccano i file con quel nome.
 

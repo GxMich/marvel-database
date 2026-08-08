@@ -146,12 +146,23 @@ function cardHTML(it, i){
   const rating = it.rating ? it.rating.toFixed(1) : null;
   const seasonTag = it.season ? ` · S${it.season}` : '';
 
+  /* Le prime locandine sono quelle che l'utente vede subito: vanno
+     scaricate con priorità, non pigramente, perché sono l'LCP.
+     width/height dichiarati riservano lo spazio ed evitano il CLS. */
+  const eager = i < 8;
+  const imgAttrs = [
+    url ? `src="${url}" data-done="1"` : '',
+    'width="342" height="513"',
+    eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"',
+    'decoding="async"',
+  ].filter(Boolean).join(' ');
+
   return `
   <article class="card ${status==='watched'?'watched':''} ${status==='skipped'?'skipped':''}"
            data-id="${it.id}" style="--i:${i}" tabindex="0" role="button"
            aria-pressed="${status==='watched'}" aria-label="${escapeAttr(it.title)}, segna come visto">
     <div class="poster" style="background:linear-gradient(160deg, ${st.from}, ${st.to});">
-      <img class="poster-img" ${url?`src="${url}" data-done="1"`:''} loading="lazy" decoding="async" alt="">
+      <img class="poster-img" ${imgAttrs} alt="">
       <div class="sheen"></div>
       <span class="icon">${st.icon}</span>
 
@@ -185,29 +196,44 @@ function escapeAttr(s){ return escapeHtml(s); }
 
 /* Le card si costruiscono una volta sola: filtri e ordinamenti poi
    agiscono su classi CSS e proprietà `order`, senza ricostruire l'HTML. */
+/* Le 184 card si costruiscono dentro un <template>, quindi fuori dal
+   documento: indicizzazione e aggancio degli eventi non costano alcun
+   ricalcolo. L'inserimento avviene una volta sola con replaceChildren,
+   che nello stesso frame rimuove gli skeleton e mette le card. */
 function buildCards(){
-  grid.innerHTML = ITEMS.map((it,i)=>cardHTML(it,i)).join('');
-  cardNodes.clear();
-  grid.querySelectorAll('.card').forEach(el => cardNodes.set(el.dataset.id, el));
+  const tpl = document.createElement('template');
+  tpl.innerHTML = ITEMS.map((it, i) => cardHTML(it, i)).join('');
+  const fragment = tpl.content;
 
-  // il poster parte trasparente e compare quando il file è pronto:
-  // serve la classe .loaded, altrimenti resta invisibile sul gradiente
-  grid.querySelectorAll('.poster-img').forEach(img=>{
+  // lo stato vuoto viaggia con le card, sempre fuori dal documento
+  emptyStateEl = document.createElement('div');
+  emptyStateEl.className = 'empty-state';
+  emptyStateEl.innerHTML = `${ICONS.search}<p>Nessun titolo trovato.</p>` +
+    `<button class="btn btn-ghost" id="emptyResetBtn">Azzera i filtri</button>`;
+  emptyStateEl.style.display = 'none';
+  fragment.appendChild(emptyStateEl);
+
+  cardNodes.clear();
+  for(const el of fragment.querySelectorAll('.card')){
+    cardNodes.set(el.dataset.id, el);
+  }
+
+  for(const img of fragment.querySelectorAll('.poster-img')){
+    if(!img.getAttribute('src')) continue;
     const poster = img.closest('.poster');
-    if(!img.getAttribute('src')) return;
+    // il poster parte trasparente: senza la classe .loaded resterebbe
+    // invisibile sopra il gradiente di riserva
     if(img.complete && img.naturalWidth > 0){
       poster.classList.add('loaded');
     }else{
-      img.addEventListener('load',  ()=> poster.classList.add('loaded'), {once:true});
-      img.addEventListener('error', ()=> img.removeAttribute('src'),     {once:true});
+      img.addEventListener('load',  () => poster.classList.add('loaded'), {once:true});
+      img.addEventListener('error', () => img.removeAttribute('src'),      {once:true});
     }
-  });
-  emptyStateEl = document.createElement('div');
-  emptyStateEl.className = 'empty-state';
-  emptyStateEl.innerHTML = `${ICONS.search}<p>Nessun titolo trovato.</p><button class="btn btn-ghost" id="emptyResetBtn">Azzera i filtri</button>`;
-  emptyStateEl.style.display = 'none';
-  grid.appendChild(emptyStateEl);
-  emptyStateEl.querySelector('#emptyResetBtn').addEventListener('click', ()=>{
+  }
+
+  grid.replaceChildren(fragment);   // unico contatto con il DOM
+
+  emptyStateEl.querySelector('#emptyResetBtn').addEventListener('click', () => {
     resetFilters();
     syncFilterUI();
     render();

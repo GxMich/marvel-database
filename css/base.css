@@ -1,58 +1,226 @@
+/* ============================================================
+   DESIGN SYSTEM — token + reset
+   Tutto il resto del CSS pesca da qui: cambiando questi valori
+   cambia l'intera interfaccia, senza toccare i componenti.
+   ============================================================ */
 :root{
-  --bg:#0b0b0f;
-  --bg-alt:#131319;
-  --card:#17171f;
-  --card-border:#26262f;
-  --red:#ed1d24;
-  --red-dark:#a8121a;
-  --gold:#f5b942;
-  --text:#f4f4f6;
-  --text-dim:#9a9aa5;
-  --green:#2ecc71;
-  --gray:#8a8a95;
-  --radius:16px;
-  --shadow:0 10px 30px rgba(0,0,0,.45);
-  /* safe area iOS (notch / dynamic island / home indicator) */
-  --sat:env(safe-area-inset-top,0px);
-  --sab:env(safe-area-inset-bottom,0px);
-  --sal:env(safe-area-inset-left,0px);
-  --sar:env(safe-area-inset-right,0px);
-  --ease-spring:cubic-bezier(.34,1.56,.64,1);
-  --ease-out:cubic-bezier(.22,.9,.3,1);
-}
-*,*::before,*::after{box-sizing:border-box}
-html{
-  scroll-behavior:smooth;
-  -webkit-text-size-adjust:100%;
-  text-size-adjust:100%;
-}
-body{
-  margin:0;
-  font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'SF Pro Text',Roboto,Helvetica,Arial,sans-serif;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(237,29,36,.25), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(245,185,66,.08), transparent),
-    var(--bg);
-  background-attachment:fixed;
-  color:var(--text);
-  min-height:100vh;
-  min-height:100dvh;
-  overflow-x:hidden;
-  overscroll-behavior-y:none;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  padding-left:var(--sal);
-  padding-right:var(--sar);
-}
-/* niente flash grigio al tap su Android/iOS + niente delay 300ms */
-a,button,select,input,.card,.chip,.status-btn,.stat-card{
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-.card,.chip,.status-btn,.badge,.brand,.stat-label{
-  -webkit-user-select:none;
-  user-select:none;
-}
-::selection{background:var(--red);color:#fff}
-a{color:var(--gold)}
+  /* ---------- SUPERFICI (OLED) ----------
+     Nero puro come base: sui pannelli OLED i pixel restano spenti.
+     Le superfici salgono per gradi, come i livelli di macOS. */
+  --bg:            #000000;
+  --surface-1:     #0A0A0C;   /* sezioni appena staccate dal fondo */
+  --surface-2:     #121214;   /* card, riquadri */
+  --surface-3:     #1C1C1E;   /* elementi elevati: dialoghi, drawer */
+  --surface-4:     #2C2C2E;   /* hover su elementi elevati */
 
+  /* ---------- VETRO ----------
+     Fondo semitrasparente + sfocatura: gli elementi sottostanti
+     restano leggibili in trasparenza mentre scorrono. */
+  --glass:         rgba(28, 28, 30, .65);
+  --glass-strong:  rgba(12, 12, 14, .82);
+  --glass-blur:    24px;
+  --glass-blur-lg: 32px;
+  /* hairline: mezzo pixel di luce invece di un bordo pieno */
+  --hairline:      rgba(255, 255, 255, .09);
+  --hairline-soft: rgba(255, 255, 255, .055);
+
+  /* ---------- COLORI D'ACCENTO ---------- */
+  --red:       #ED1D24;
+  --red-deep:  #A8121A;
+  --red-glow:  rgba(237, 29, 36, .45);
+  --gold:      #F5B942;
+  --gold-deep: #C98D1F;
+  --green:     #30D158;   /* verde di sistema iOS */
+  --gray:      #8E8E93;   /* grigio di sistema iOS */
+  --violet:    #7C5CFF;
+
+  /* ---------- TESTO ----------
+     Bianchi traslucidi invece di grigi pieni: si adattano
+     a qualsiasi superficie sottostante. */
+  --text:    #F5F5F7;
+  --text-2:  rgba(235, 235, 245, .62);
+  --text-3:  rgba(235, 235, 245, .34);
+
+  /* ---------- SPAZIATURA (base 4px) ---------- */
+  --sp-1:  4px;   --sp-2:  8px;   --sp-3:  12px;  --sp-4:  16px;
+  --sp-5:  20px;  --sp-6:  24px;  --sp-8:  32px;  --sp-10: 40px;
+  --sp-12: 48px;  --sp-16: 64px;  --sp-20: 80px;
+
+  /* ---------- RAGGI ---------- */
+  --r-xs:   6px;
+  --r-sm:   10px;
+  --r-md:   14px;
+  --r-lg:   18px;
+  --r-xl:   24px;
+  --r-2xl:  32px;
+  --r-full: 999px;
+
+  /* ---------- TIPOGRAFIA ----------
+     Stack di sistema: nessun font da scaricare, nessun blocco
+     del rendering, e su Apple si ottiene SF Pro nativo. */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+          "Segoe UI Variable Display", "Segoe UI", Inter, system-ui,
+          Roboto, Helvetica, Arial, sans-serif;
+  --font-num: "SF Mono", ui-monospace, "Segoe UI Mono", monospace;
+
+  --fs-overline: 10.5px;
+  --fs-caption:  12px;
+  --fs-body-sm:  13px;
+  --fs-body:     14.5px;
+  --fs-lead:     16px;
+  --fs-title:    20px;
+  --fs-heading:  26px;
+  --fs-display:  clamp(34px, 7vw, 60px);
+
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-heavy:    800;
+
+  /* tracking negativo sui titoli grandi, positivo sulle etichette
+     minuscole: è la regola tipografica di Apple */
+  --track-tight:  -.035em;
+  --track-snug:   -.018em;
+  --track-normal:  0;
+  --track-wide:    .08em;
+  --track-caps:    .12em;
+
+  --lh-tight: 1.1;
+  --lh-snug:  1.3;
+  --lh-body:  1.55;
+
+  /* ---------- ELEVAZIONE ----------
+     Ombre a più strati (contatto + diffusione + hairline)
+     al posto dei bordi: dà profondità senza linee dure. */
+  --e1: 0 1px 2px rgba(0,0,0,.5),
+        inset 0 0 0 .5px var(--hairline-soft);
+  --e2: 0 2px 6px rgba(0,0,0,.45),
+        0 8px 20px rgba(0,0,0,.35),
+        inset 0 0 0 .5px var(--hairline-soft);
+  --e3: 0 4px 12px rgba(0,0,0,.5),
+        0 16px 40px rgba(0,0,0,.45),
+        inset 0 0 0 .5px var(--hairline);
+  --e4: 0 8px 24px rgba(0,0,0,.55),
+        0 32px 80px rgba(0,0,0,.6),
+        inset 0 0 0 .5px var(--hairline);
+  --e-red: 0 4px 14px rgba(237,29,36,.35), 0 12px 32px rgba(237,29,36,.22);
+
+  /* ---------- MOVIMENTO ----------
+     Curve con leggero superamento: l'elemento oltrepassa la meta
+     e rientra, cosi il movimento sembra fisico invece che meccanico. */
+  --spring:      cubic-bezier(.175, .885, .32, 1.275);
+  --spring-soft: cubic-bezier(.34, 1.35, .64, 1);
+  --ease-out:    cubic-bezier(.22, .9, .3, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+
+  --dur-1: .16s;
+  --dur-2: .26s;
+  --dur-3: .38s;
+  --dur-4: .55s;
+
+  /* ---------- LAYOUT ---------- */
+  --maxw: 1280px;
+  --topbar-h: 132px;   /* altezza della barra appiccicata, usata per gli offset */
+
+  /* ---------- SAFE AREA iOS ---------- */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+body{
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--track-snug);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}
+
+h1, h2, h3, p, figure{ margin: 0; }
+
+/* niente flash grigio al tap su Android/iOS, niente ritardo di 300ms */
+a, button, select, input, .card, .chip, .fchip, .status-btn, .stat-card{
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.card, .chip, .fchip, .status-btn, .badge, .brand, .stat-label{
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button{ font: inherit; letter-spacing: inherit; }
+
+::selection{ background: var(--red); color: #fff; }
+
+a{
+  color: var(--gold);
+  text-decoration-color: rgba(245,185,66,.35);
+  text-underline-offset: 2px;
+  transition: text-decoration-color var(--dur-1) var(--ease-out);
+}
+a:hover{ text-decoration-color: var(--gold); }
+
+/* anello di focus unico per tutta l'interfaccia */
+:focus-visible{
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar{ width: 10px; height: 10px; }
+::-webkit-scrollbar-track{ background: transparent; }
+::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.14);
+  border-radius: var(--r-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.26); background-clip: content-box; }
+
+/* ---------- utility ---------- */
+.u-glass{
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+}
+.u-tabular{ font-variant-numeric: tabular-nums; }
+.visually-hidden{
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Chi ha chiesto meno animazioni riceve comunque i cambi di stato,
+   ma senza movimento. */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

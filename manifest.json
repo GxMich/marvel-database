@@ -1,0 +1,49 @@
+{
+  "name": "Marvel Database — Film, serie e animazione",
+  "short_name": "Marvel DB",
+  "description": "Archivio di 184 film, serie TV e contenuti animati Marvel con tracciamento dei titoli visti, filtri multilivello e backup JSON.",
+  "id": "/marvel-database/",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "it",
+  "dir": "ltr",
+  "categories": ["entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Da vedere",
+      "short_name": "Da vedere",
+      "url": "./?filtro=da-vedere",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Essenziali MCU",
+      "short_name": "Essenziali",
+      "url": "./?filtro=essenziali",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

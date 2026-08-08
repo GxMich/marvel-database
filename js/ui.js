@@ -45,12 +45,16 @@ function showToast(msg){
 
 /* ---------- torna su ---------- */
 const scrollBtn = document.getElementById('scrollTopBtn');
+const topbarEl  = document.getElementById('topbar');
 let scrollTicking = false;
 window.addEventListener('scroll', ()=>{
   if(scrollTicking) return;
   scrollTicking = true;
   requestAnimationFrame(()=>{
-    scrollBtn.classList.toggle('show', window.scrollY > 600);
+    const y = window.scrollY;
+    scrollBtn.classList.toggle('show', y > 600);
+    // il vetro della barra si fa più denso appena qualcosa le passa sotto
+    if(topbarEl) topbarEl.classList.toggle('is-stuck', y > 8);
     scrollTicking = false;
   });
 }, {passive:true});
@@ -61,11 +65,15 @@ const lbl = (long, short) => `<span class="lbl-long">${long}</span><span class="
 document.getElementById('sparkLeft').innerHTML     = ICONS.star;
 document.getElementById('sparkRight').innerHTML    = ICONS.star;
 document.getElementById('searchIconSlot').innerHTML= ICONS.search;
+document.getElementById('sortIconSlot').innerHTML  = ICONS.sort;
 document.getElementById('chevronSort').innerHTML   = ICONS.chevronDown;
-document.getElementById('exportBtn').innerHTML     = ICONS.download + lbl(' Esporta','&nbsp;Esporta');
-document.getElementById('importBtn').innerHTML     = ICONS.upload   + lbl(' Importa','&nbsp;Importa');
-document.getElementById('settingsBtn').innerHTML   = ICONS.gear     + lbl(' Info','&nbsp;Info');
-document.getElementById('filterToggle').innerHTML  = ICONS.sliders + ' Filtri <span class="filter-badge" id="filterCountBadge">0</span>';
+/* Esporta/Importa vivono nel modale: lì c'è spazio per l'etichetta piena */
+document.getElementById('exportBtn').innerHTML     = ICONS.download + ' Esporta JSON';
+document.getElementById('importBtn').innerHTML     = ICONS.upload   + ' Importa JSON';
+/* nella barra restano solo icone: su mobile il testo sparisce via CSS */
+document.getElementById('settingsBtn').innerHTML   = ICONS.gear + lbl(' Info','');
+document.getElementById('filterToggle').innerHTML  = ICONS.sliders + lbl(' Filtri','') +
+  '<span class="filter-badge" id="filterCountBadge">0</span>';
 document.getElementById('resetBtn').innerHTML      = ICONS.refresh + ' Azzera visti';
 document.getElementById('scrollTopBtn').innerHTML  = ICONS.chevronUp;
 document.getElementById('modalCloseBtn').innerHTML = ICONS.close;
