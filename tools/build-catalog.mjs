@@ -103,7 +103,36 @@ function normalizeStatus(raw, isTv, releaseDate) {
   return 'released';
 }
 
-const report = { ok: [], missing: [], yearMismatch: [], suspicious: [] };
+/* Durata media di un episodio, in minuti. TMDB la espone in tre modi di
+   affidabilità decrescente: le durate reali episodio per episodio, il campo
+   episode_run_time della serie, o niente — e in quel caso si guarda la
+   stagione 1, che quasi sempre ce l'ha. Senza questo dato il monte ore
+   delle statistiche sarebbe inventato, perché gli episodi sono la gran
+   parte del catalogo. */
+async function episodeRuntime(details, tmdbId, seasonInfo) {
+  const avg = list => Math.round(list.reduce((a, b) => a + b, 0) / list.length);
+  if (seasonInfo?.runtimes?.length) return avg(seasonInfo.runtimes);
+  if (details.episode_run_time?.length) return details.episode_run_time[0];
+  try {
+    const s1 = await tmdb(`/tv/${tmdbId}/season/1`, {});
+    const rt = (s1.episodes || []).map(e => e.runtime).filter(r => r > 0);
+    if (rt.length) return avg(rt);
+  } catch { /* la stagione 1 può non esistere: si resta senza durata */ }
+  return null;
+}
+
+/* Minuti totali del titolo. Per le stagioni tracciate a parte, se TMDB dà la
+   durata di ogni episodio, si sommano quelle vere invece di moltiplicare. */
+function totalMinutes(isTv, details, seasonInfo, epRuntime, episodes) {
+  if (!isTv) return details.runtime || null;
+  if (seasonInfo?.runtimes?.length && seasonInfo.runtimes.length === seasonInfo.episodes) {
+    return seasonInfo.runtimes.reduce((a, b) => a + b, 0);
+  }
+  if (epRuntime && episodes) return epRuntime * episodes;
+  return null;
+}
+
+const report = { ok: [], missing: [], yearMismatch: [], suspicious: [], noDuration: [] };
 
 /* tmdbId della stagione 1 di ogni serie, per riusarlo nelle stagioni successive */
 const seriesIdByQuery = new Map();
@@ -162,7 +191,12 @@ async function resolve(entry) {
     try {
       const season = await tmdb(`/tv/${best.id}/season/${entry.s}`, { language: 'it-IT' });
       if (season.poster_path) poster = season.poster_path;
-      seasonInfo = { number: entry.s, episodes: season.episodes?.length || null };
+      seasonInfo = {
+        number: entry.s,
+        episodes: season.episodes?.length || null,
+        // durate reali episodio per episodio: è il dato più preciso che TMDB dia
+        runtimes: (season.episodes || []).map(e => e.runtime).filter(r => r > 0),
+      };
     } catch { /* la stagione può non esistere: si tiene il poster della serie */ }
   }
 
@@ -175,7 +209,12 @@ async function resolve(entry) {
   const releaseDate = isTv ? details.first_air_date : details.release_date;
   const year = releaseDate ? Number(releaseDate.slice(0, 4)) : entry.y;
 
+  const epRuntime = isTv ? await episodeRuntime(details, best.id, seasonInfo) : null;
+  const episodes = seasonInfo ? seasonInfo.episodes : (isTv ? details.number_of_episodes || null : null);
+  const minutes = totalMinutes(isTv, details, seasonInfo, epRuntime, episodes);
+
   report.ok.push(entry.q);
+  if (!minutes) report.noDuration.push(`${entry.q} (${entry.y})`);
 
   return {
     id: slugify(`${entry.it || details.title || details.name}-${entry.y}${entry.s ? '-s' + entry.s : ''}`),
@@ -199,9 +238,11 @@ async function resolve(entry) {
     rating: details.vote_average ? Math.round(details.vote_average * 10) / 10 : null,
     votes: details.vote_count || 0,
     overview: details.overview || '',
-    runtime: isTv ? null : (details.runtime || null),
+    // per i film è la durata del film, per le serie quella di un episodio
+    runtime: isTv ? epRuntime : (details.runtime || null),
+    totalMinutes: minutes,
     seasons: isTv ? (details.number_of_seasons || null) : null,
-    episodes: seasonInfo ? seasonInfo.episodes : (isTv ? details.number_of_episodes || null : null),
+    episodes,
     season: entry.s || null,
     poster: poster || null,
     backdrop: details.backdrop_path || null,
@@ -271,6 +312,7 @@ const CATALOG = `;
   console.log(`Duplicati: ${dups.length ? '\n  - ' + dups.join('\n  - ') : 'nessuno'}`);
   if (report.missing.length) console.log(`\nNON TROVATI (${report.missing.length}):\n  - ` + report.missing.join('\n  - '));
   if (report.yearMismatch.length) console.log(`\nDA VERIFICARE (${report.yearMismatch.length}):\n  - ` + report.yearMismatch.join('\n  - '));
+  if (report.noDuration.length) console.log(`\nSENZA DURATA (${report.noDuration.length}) — escluse dal monte ore:\n  - ` + report.noDuration.join('\n  - '));
 
   const byType = catalog.reduce((a, c) => { a[c.type] = (a[c.type] || 0) + 1; return a; }, {});
   const byUni = catalog.reduce((a, c) => { a[c.universe] = (a[c.universe] || 0) + 1; return a; }, {});
