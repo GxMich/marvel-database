@@ -14,6 +14,10 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--dur-2) var(--ease-out), visibility var(--dur-2);
+  /* Da chiuso il pannello è traslato fuori dallo schermo: senza questo
+     ritaglio resta comunque nell'area scorribile e il telefono permette
+     di spostare la pagina di lato per raggiungerlo. */
+  overflow: hidden;
 }
 .filter-panel-wrap.open{ opacity: 1; visibility: visible; }
 body.no-scroll{ overflow: hidden; }

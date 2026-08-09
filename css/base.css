@@ -151,12 +151,35 @@ body{
   background: var(--bg);
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-x: hidden;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-left: var(--sal);
   padding-right: var(--sar);
+}
+
+/* ------------------------------------------------------------
+   NIENTE SCORRIMENTO LATERALE
+   Il contenuto non deve mai superare la larghezza dello schermo.
+
+   Due trappole evitate qui:
+   1. `overflow-x` va messo SOLO su <html>, mai su <body>: su body
+      renderebbe il body stesso il contenitore di scorrimento e la
+      barra `position: sticky` smetterebbe di agganciarsi in alto.
+   2. Niente `clip`: accoppiato a un asse verticale `visible` fa
+      risolvere in `clip` anche quello, uccidendo lo scorrimento.
+      `hidden` su <html> viene invece propagato alla viewport, che
+      resta il contenitore di scorrimento: sticky continua a funzionare.
+   ------------------------------------------------------------ */
+html{
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;          /* esplicito, così la coppia non riserva sorprese */
+  overscroll-behavior-x: none;
+}
+body{
+  max-width: 100%;
+  /* nessun overflow qui: vedi punto 1 */
 }
 
 h1, h2, h3, p, figure{ margin: 0; }
