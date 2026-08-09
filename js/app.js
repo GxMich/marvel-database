@@ -4,6 +4,13 @@
    precaricamento locandine → service worker.
    ========================================================== */
 
+/* ==========================================================
+   TEST DIAGNOSTICO — intro video disattivata
+   Serve a isolare se l'overflow orizzontale segnalato su iPhone
+   dipende dal video. Per riattivarla: cambiare `true` in `false`.
+   ========================================================== */
+const DIAGNOSTIC_DISABLE_INTRO = true;
+
 async function boot(){
   // 1. dati e struttura (tutto sincrono e locale: nessuna rete)
   loadState();
@@ -14,7 +21,7 @@ async function boot(){
   render();
 
   // 2. intro: parte subito, il resto continua dietro le quinte
-  const showIntro = shouldShowIntro();
+  const showIntro = shouldShowIntro() && !DIAGNOSTIC_DISABLE_INTRO;
   if(!showIntro){
     dismissIntroImmediately();
   }else{

@@ -26,8 +26,15 @@
 .hero::before{
   content: "";
   position: absolute;
-  inset: -20% 0 auto 50%;
-  width: min(900px, 120vw);
+  top: -20%;
+  left: 50%;
+  /* Prima era min(900px, 120vw): il 120% del viewport genera un box
+     più largo dello schermo (su un telefono da 390px, 468px — 78px
+     oltre il bordo). L'overflow-x:hidden su <html> dovrebbe tagliarlo,
+     ma è un elemento puramente decorativo: non ha alcun motivo di
+     poter eccedere il contenitore, quindi qui si elimina il rischio
+     alla radice invece di fare affidamento sul taglio a monte. */
+  width: min(900px, 100%);
   height: 520px;
   transform: translateX(-50%);
   background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(237,29,36,.13), transparent 70%);

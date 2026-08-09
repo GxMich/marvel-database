@@ -9,7 +9,7 @@
 
    Aggiornare VERSION ad ogni modifica di CSS/JS.
    ============================================================ */
-const VERSION     = 'v14';
+const VERSION     = 'v15';
 const SHELL_CACHE = `marvel-shell-${VERSION}`;
 const MEDIA_CACHE = 'marvel-media';
 
