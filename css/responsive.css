@@ -162,6 +162,36 @@
 
   /* 16px è la soglia sotto cui iOS zooma automaticamente al focus */
   .search-box input, select{ font-size: 16px; }
+
+  /* ---------- informativa ----------
+     Su schermo stretto testo e pulsante affiancati schiacciavano la
+     riga di testo in una colonna altissima, che usciva dallo schermo.
+     Qui diventano due blocchi impilati.
+     Ancoraggio con left/right invece di left:50% + translateX: così la
+     trasformazione resta solo verticale e non interferisce con il
+     posizionamento fisso. */
+  .consent{
+    left: var(--sp-3);
+    right: var(--sp-3);
+    bottom: calc(var(--sp-3) + var(--sab));
+    width: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    transform: translateY(calc(100% + var(--sp-8)));
+  }
+  .consent.show{ transform: translateY(0); }
+  .consent .btn{ width: 100%; justify-content: center; padding: var(--sp-3); }
+
+  /* i dialoghi legali occupano quasi tutto lo schermo */
+  .sheet-dialog{ max-height: 88vh; }
+  .sheet-dialog-head{ padding: var(--sp-5) var(--sp-5) var(--sp-3); }
+  .sheet-dialog-head .modal-close{ top: var(--sp-4); right: var(--sp-4); }
+  .sheet-dialog-body{ padding: var(--sp-4) var(--sp-5) var(--sp-5); }
+  .sheet-dialog-foot{ padding: var(--sp-3) var(--sp-5) calc(var(--sp-5) + var(--sab)); }
 }
 
 @media (max-width: 380px){

@@ -174,7 +174,11 @@ body{
 html{
   max-width: 100%;
   overflow-x: hidden;
-  overflow-y: auto;          /* esplicito, così la coppia non riserva sorprese */
+  /* Niente `overflow-y` esplicito: la regola di accoppiamento lo rende
+     già `auto`. Dichiararlo renderebbe <html> un contenitore di
+     scorrimento vero e proprio, e su mobile alcuni browser smettono di
+     ancorare alla viewport gli elementi `position: fixed` (il banner
+     scorreva via insieme alla pagina). */
   overscroll-behavior-x: none;
 }
 body{
