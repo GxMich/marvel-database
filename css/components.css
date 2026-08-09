@@ -42,10 +42,44 @@
 .card:active{ transform: translateY(-2px) scale(.99); }
 .card.is-hidden{ display: none; }
 
-/* stato: un anello interno colorato al posto della fascia diagonale.
-   Si legge a colpo d'occhio senza rompere la geometria della card. */
-.card.watched{ box-shadow: var(--e1), inset 0 0 0 1.5px rgba(48,209,88,.55); }
-.card.watched:hover{ box-shadow: var(--e3), inset 0 0 0 1.5px rgba(48,209,88,.7); }
+/* ------------------------------------------------------------
+   STATO "VISTO"
+   In una griglia di 184 locandine un anello sottile si perde: lo
+   stato deve leggersi con la coda dell'occhio, mentre si scorre.
+   Tre segnali che lavorano insieme — anello, barra in testa, corpo
+   tinto — nessuno dei quali copre la locandina o sposta la
+   geometria della card.
+   ------------------------------------------------------------ */
+.card.watched{
+  box-shadow: var(--e1),
+              inset 0 0 0 2px rgba(48,209,88,.9),
+              0 4px 16px rgba(48,209,88,.2);
+}
+.card.watched:hover{
+  box-shadow: var(--e3),
+              inset 0 0 0 2px var(--green),
+              0 10px 30px rgba(48,209,88,.32);
+}
+
+/* La barra in testa è il segnale che si intercetta per primo
+   scorrendo: sta sul bordo, dove l'occhio non deve cercarla. */
+.card.watched::before{
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  z-index: 6;
+  background: linear-gradient(90deg, var(--green), #7BE495);
+  pointer-events: none;
+}
+
+/* Il corpo si tinge: sulle locandine chiare l'anello verde perde
+   contrasto, la fascia sotto no. */
+.card.watched .card-body{
+  background: linear-gradient(180deg, rgba(48,209,88,.15), rgba(48,209,88,.05));
+}
+.card.watched .card-year{ color: rgba(216,248,226,.9); }
+
 .card.skipped{ opacity: .45; box-shadow: var(--e1), inset 0 0 0 1.5px rgba(142,142,147,.4); }
 .card.skipped:hover{ opacity: .85; }
 
