@@ -23,29 +23,29 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png">
 
-<link rel="stylesheet" href="css/base.css?v=12">
-<link rel="stylesheet" href="css/intro.css?v=12">
-<link rel="stylesheet" href="css/layout.css?v=12">
-<link rel="stylesheet" href="css/components.css?v=12">
-<link rel="stylesheet" href="css/facets.css?v=12">
-<link rel="stylesheet" href="css/responsive.css?v=12">
+<link rel="stylesheet" href="css/base.css?v=14">
+<link rel="stylesheet" href="css/intro.css?v=14">
+<link rel="stylesheet" href="css/layout.css?v=14">
+<link rel="stylesheet" href="css/components.css?v=14">
+<link rel="stylesheet" href="css/facets.css?v=14">
+<link rel="stylesheet" href="css/responsive.css?v=14">
 
 <!-- Script classici con defer, non ES modules: i moduli sono bloccati
      dal protocollo file:// e il sito non si aprirebbe più con un doppio
      click. Con defer il download parte subito ma l'esecuzione avviene a
      parsing finito, quindi non bloccano mai il rendering. L'ordine è
      garantito: i dati prima di chi li usa. -->
-<script defer src="js/icons.js?v=12"></script>
-<script defer src="js/data/catalog.js?v=12"></script>
-<script defer src="js/data/franchises.js?v=12"></script>
-<script defer src="js/storage.js?v=12"></script>
-<script defer src="js/posters.js?v=12"></script>
-<script defer src="js/render.js?v=12"></script>
-<script defer src="js/controls.js?v=12"></script>
-<script defer src="js/ui.js?v=12"></script>
-<script defer src="js/intro.js?v=12"></script>
-<script defer src="js/legal.js?v=12"></script>
-<script defer src="js/app.js?v=12"></script>
+<script defer src="js/icons.js?v=14"></script>
+<script defer src="js/data/catalog.js?v=14"></script>
+<script defer src="js/data/franchises.js?v=14"></script>
+<script defer src="js/storage.js?v=14"></script>
+<script defer src="js/posters.js?v=14"></script>
+<script defer src="js/render.js?v=14"></script>
+<script defer src="js/controls.js?v=14"></script>
+<script defer src="js/ui.js?v=14"></script>
+<script defer src="js/intro.js?v=14"></script>
+<script defer src="js/legal.js?v=14"></script>
+<script defer src="js/app.js?v=14"></script>
 </head>
 <body>
 
@@ -53,7 +53,11 @@
   <!-- preload="metadata": del video (8 MB) si scarica solo l'intestazione,
        il resto arriva in streaming mentre scorre. Con preload="auto"
        competeva con CSS e locandine per la banda del primo caricamento. -->
-  <video id="introVideo" muted playsinline autoplay preload="metadata" disablepictureinpicture>
+  <!-- width/height sono solo un suggerimento di proporzione (16:9), non
+       la dimensione resa: il CSS impone width:100%;height:100%. Servono
+       a evitare che il browser stimi un riquadro sbagliato nell'istante
+       prima che il CSS venga applicato. -->
+  <video id="introVideo" width="1920" height="1080" muted playsinline autoplay preload="metadata" disablepictureinpicture>
     <source src="assets/video/marvel-intro.mp4" type="video/mp4">
   </video>
   <div class="intro-vignette"></div>

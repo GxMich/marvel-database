@@ -171,10 +171,15 @@
      trasformazione resta solo verticale e non interferisce con il
      posizionamento fisso. */
   .consent{
-    left: var(--sp-3);
-    right: var(--sp-3);
+    left: var(--sp-4);
+    right: var(--sp-4);
     bottom: calc(var(--sp-3) + var(--sab));
     width: auto;
+    /* max-width esplicito oltre a left/right: sono ridondanti in teoria
+       (left+right già vincolano la larghezza), ma se un margine calcolato
+       da somme di variabili finisce per sforare di una frazione di pixel
+       su qualche telefono, il tetto esplicito lo impedisce comunque. */
+    max-width: calc(100% - var(--sp-4) * 2 - 4px);
     max-height: 60vh;
     overflow-y: auto;
     flex-direction: column;

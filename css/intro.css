@@ -3,7 +3,14 @@
    ============================================================ */
 .intro{
   position: fixed;
-  inset: 0;
+  /* top/right/bottom/left espliciti invece della shorthand `inset`:
+     stesso risultato, ma elimina qualsiasi dubbio di supporto su
+     browser meno recenti — questo è il contenitore dell'unico
+     elemento (il video) segnalato come "esce dallo schermo". */
+  top: 0; right: 0; bottom: 0; left: 0;
+  width: 100%;
+  max-width: 100vw;
+  height: 100%;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -15,8 +22,19 @@
 .intro.hide{ opacity: 0; visibility: hidden; pointer-events: none; }
 
 .intro video{
-  width: 100%;
-  height: 100%;
+  /* 100% esatto, a filo del bordo, è il punto più fragile: un video in
+     autoplay viene composto dal sistema operativo in un livello a parte
+     (non dal motore di rendering della pagina), e su alcuni telefoni
+     quel livello arrotonda le dimensioni per eccesso di una frazione
+     di pixel. A filo del bordo quella frazione diventa overflow
+     orizzontale. Un margine di 2px, invisibile perché il contenitore
+     è già nero, elimina il problema qualunque sia la causa esatta. */
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  max-width: calc(100% - 2px);
+  /* il centraggio lo fa già .intro (flex + align/justify-content:center):
+     niente margin qui, altrimenti si riaggiunge lo spazio appena tolto */
+  display: block;      /* niente spazio fantasma sotto la riga, tipico di inline/video */
   object-fit: cover;
   pointer-events: none;   /* iOS: evita che il player nativo prenda il controllo */
 }
