@@ -23,29 +23,31 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png">
 
-<link rel="stylesheet" href="css/base.css?v=15">
-<link rel="stylesheet" href="css/intro.css?v=15">
-<link rel="stylesheet" href="css/layout.css?v=15">
-<link rel="stylesheet" href="css/components.css?v=15">
-<link rel="stylesheet" href="css/facets.css?v=15">
-<link rel="stylesheet" href="css/responsive.css?v=15">
+<link rel="stylesheet" href="css/base.css?v=16">
+<link rel="stylesheet" href="css/intro.css?v=16">
+<link rel="stylesheet" href="css/layout.css?v=16">
+<link rel="stylesheet" href="css/components.css?v=16">
+<link rel="stylesheet" href="css/facets.css?v=16">
+<link rel="stylesheet" href="css/wrapped.css?v=16">
+<link rel="stylesheet" href="css/responsive.css?v=16">
 
 <!-- Script classici con defer, non ES modules: i moduli sono bloccati
      dal protocollo file:// e il sito non si aprirebbe più con un doppio
      click. Con defer il download parte subito ma l'esecuzione avviene a
      parsing finito, quindi non bloccano mai il rendering. L'ordine è
      garantito: i dati prima di chi li usa. -->
-<script defer src="js/icons.js?v=15"></script>
-<script defer src="js/data/catalog.js?v=15"></script>
-<script defer src="js/data/franchises.js?v=15"></script>
-<script defer src="js/storage.js?v=15"></script>
-<script defer src="js/posters.js?v=15"></script>
-<script defer src="js/render.js?v=15"></script>
-<script defer src="js/controls.js?v=15"></script>
-<script defer src="js/ui.js?v=15"></script>
-<script defer src="js/intro.js?v=15"></script>
-<script defer src="js/legal.js?v=15"></script>
-<script defer src="js/app.js?v=15"></script>
+<script defer src="js/icons.js?v=16"></script>
+<script defer src="js/data/catalog.js?v=16"></script>
+<script defer src="js/data/franchises.js?v=16"></script>
+<script defer src="js/storage.js?v=16"></script>
+<script defer src="js/posters.js?v=16"></script>
+<script defer src="js/render.js?v=16"></script>
+<script defer src="js/controls.js?v=16"></script>
+<script defer src="js/ui.js?v=16"></script>
+<script defer src="js/intro.js?v=16"></script>
+<script defer src="js/legal.js?v=16"></script>
+<script defer src="js/wrapped.js?v=16"></script>
+<script defer src="js/app.js?v=16"></script>
 </head>
 <body>
 
@@ -86,6 +88,8 @@
     <div class="progress-track" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
     <div class="progress-label">Completamento: <b id="progressPct">0%</b></div>
   </div>
+
+  <button class="wrap-cta" id="wrapOpenBtn">Crea la tua card</button>
 </header>
 
 <!-- barra appiccicata: resta in cima e sfoca ciò che le scorre sotto -->
@@ -209,6 +213,45 @@
     <button class="btn btn-ghost btn-danger" id="resetBtn"></button>
 
     <div class="modal-status" id="modalStatus"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     WRAPPED — card condivisibili
+     Le anteprime sono <canvas> generati da js/wrapped.js: quello che
+     si vede è esattamente il PNG che viene condiviso.
+     ============================================================ -->
+<div class="modal-backdrop" id="wrapBackdrop">
+  <div class="modal wrap-modal" role="dialog" aria-modal="true" aria-labelledby="wrapTitle">
+    <button class="modal-close" id="wrapCloseBtn" aria-label="Chiudi"></button>
+    <h2 id="wrapTitle"><span id="wrapTitleIcon"></span> Il tuo Marvel</h2>
+
+    <p class="wrap-intro" id="wrapIntro">
+      I numeri vengono dai titoli che hai segnato su questo dispositivo.
+      Scegli la card che ti somiglia di più.
+    </p>
+
+    <div class="wrap-empty" id="wrapEmpty" hidden>
+      <span id="wrapEmptyIcon"></span>
+      <b>Non hai ancora segnato niente</b>
+      Segna qualche titolo come visto e qui compariranno le tue statistiche.
+    </div>
+
+    <div class="wrap-loading" id="wrapLoading" hidden>
+      <span class="wrap-spinner"></span> Preparo le tue card…
+    </div>
+
+    <div class="wrap-picker" id="wrapPicker" hidden></div>
+
+    <div class="wrap-stage" id="wrapStage" hidden>
+      <div class="wrap-canvas-holder" id="wrapCanvasHolder"></div>
+      <div class="wrap-actions">
+        <button class="btn btn-primary" id="wrapShareBtn"></button>
+        <button class="btn btn-gold" id="wrapDownloadBtn"></button>
+        <button class="btn btn-ghost" id="wrapBackBtn">Scegli un'altra</button>
+      </div>
+      <p class="wrap-note" id="wrapNote"></p>
+    </div>
   </div>
 </div>
 

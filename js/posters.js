@@ -26,7 +26,15 @@ function applyPosterToCard(id, url){
 }
 
 /* Precarica le immagini nella cache HTTP del browser.
-   onProgress(fatte, totale) alimenta la barra dell'intro. */
+   onProgress(fatte, totale) alimenta la barra dell'intro.
+
+   crossOrigin='anonymous' non serve a mostrare le locandine, serve a
+   poterle poi RIDISEGNARE su un canvas (le card condivisibili). Una
+   risposta ottenuta senza CORS è "opaca": il browser la mostra ma
+   marchia il canvas come contaminato e ne blocca l'esportazione. E
+   poiché la cache risponde per URL, basterebbe una sola richiesta
+   senza CORS per avvelenare tutte le successive: per questo il flag
+   sta sia qui sia sulle <img> delle card. */
 function preloadPosters(items, onProgress){
   const urls = items.map(i=>posterUrl(i)).filter(Boolean);
   return new Promise(resolve=>{
@@ -43,6 +51,7 @@ function preloadPosters(items, onProgress){
       if(idx >= urls.length) return;
       const url = urls[idx++];
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = step;
       img.onerror = step;
       img.decoding = 'async';

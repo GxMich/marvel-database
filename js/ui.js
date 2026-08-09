@@ -84,3 +84,10 @@ document.getElementById('chipWatched').innerHTML   = ICONS.checkSmall + ' Visti'
 document.getElementById('chipSkippedFilter').innerHTML = ICONS.skipSmall + ' Saltati';
 document.getElementById('chipEssential').innerHTML = ICONS.starSmall + ' Essenziali MCU';
 document.getElementById('introSkipIcon').innerHTML = ICONS.skipSmall;
+/* wrapped */
+document.getElementById('wrapOpenBtn').innerHTML     = ICONS.sparkles + ' Crea la tua card';
+document.getElementById('wrapCloseBtn').innerHTML    = ICONS.close;
+document.getElementById('wrapTitleIcon').innerHTML   = ICONS.sparkles;
+document.getElementById('wrapEmptyIcon').innerHTML   = ICONS.starSmall;
+document.getElementById('wrapShareBtn').innerHTML    = ICONS.share + ' Condividi';
+document.getElementById('wrapDownloadBtn').innerHTML = ICONS.download + ' Scarica PNG';

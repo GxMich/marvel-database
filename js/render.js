@@ -152,6 +152,8 @@ function cardHTML(it, i){
   const eager = i < 8;
   const imgAttrs = [
     url ? `src="${url}" data-done="1"` : '',
+    // vedi posters.js: senza CORS il canvas delle card condivisibili si contamina
+    'crossorigin="anonymous"',
     'width="342" height="513"',
     eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"',
     'decoding="async"',

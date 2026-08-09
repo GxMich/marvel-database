@@ -22,6 +22,7 @@ marvel/
 │   ├── layout.css              # hero, barra appiccicata in vetro, controlli
 │   ├── components.css          # card, badge, skeleton, modale, toast
 │   ├── facets.css              # pannello filtri (desktop + drawer mobile)
+│   ├── wrapped.css             # selettore e anteprima delle card condivisibili
 │   └── responsive.css          # performance e adattamento mobile
 ├── js/
 │   ├── data/
@@ -34,6 +35,7 @@ marvel/
 │   ├── controls.js             # pannello filtri, export/import
 │   ├── ui.js                   # modale, toast, torna-su, icone
 │   ├── intro.js                # video di apertura
+│   ├── wrapped.js              # statistiche e card condivisibili (canvas)
 │   └── app.js                  # avvio + registrazione service worker
 └── tools/
     ├── master-list.mjs         # tassonomia curata a mano
@@ -48,8 +50,12 @@ Il service worker tiene due cache separate, perché i contenuti hanno vite diver
 - **`marvel-shell-<versione>`** — HTML, CSS, JS, icone. Si svuota quando cambia
   `VERSION` in `sw.js`. Strategia *stale-while-revalidate*: la pagina si apre dalla
   cache e la versione nuova arriva in sottofondo.
-- **`marvel-media`** — locandine TMDB e video di intro. Non cambiano mai e pesano
-  molto, quindi sopravvivono ai rilasci. Strategia *cache-first*.
+- **`marvel-media`** — video di intro. Non cambia mai e pesa 8 MB, quindi sopravvive
+  ai rilasci. Strategia *cache-first*.
+- **`marvel-posters-v2`** — locandine TMDB. Stessa logica del video, ma con una
+  versione propria: dalla v2 si richiedono in modalità CORS (vedi *Card condivisibili*)
+  e quelle salvate prima non sono più utilizzabili. Tenendole separate dal video si
+  invalidano solo loro, senza far riscaricare 8 MB.
 
 Dopo la prima visita l'archivio funziona **completamente offline**, locandine incluse.
 
@@ -71,7 +77,15 @@ Per aggiungere un titolo: inseriscilo in `master-list.mjs`, poi rigenera:
 node tools/build-catalog.mjs
 ```
 
-Lo script segnala titoli non trovati, accoppiamenti sospetti, duplicati e poster mancanti.
+Lo script segnala titoli non trovati, accoppiamenti sospetti, duplicati, poster mancanti
+e titoli senza durata.
+
+**Durate.** Per i film `runtime` è la durata del film; per le serie è la durata di un
+episodio, presa dalle durate reali degli episodi quando TMDB le espone e altrimenti da
+`episode_run_time`. `totalMinutes` è il monte minuti complessivo del titolo, ed è quello
+che alimenta le statistiche. Serve perché gli episodi sono l'88% del catalogo: stimarli
+con una durata fissa gonfiava il totale del 37% (1.696 ore contro 1.238 reali), soprattutto
+per l'animazione, dove un episodio dura in mediana 26 minuti contro i 50 del live action.
 
 ## Tassonomia
 
@@ -87,6 +101,8 @@ Ogni titolo è classificato su più assi, e può appartenere a più categorie:
 | **Personaggi** | 59 |
 | **Fase MCU** | 1–6, con saga Infinity/Multiverse — solo per i titoli MCU |
 
+Il catalogo copre **1.238 ore** di visione: 203 di film e il resto di episodi.
+
 I contenuti non ancora usciti sono marcati **In arrivo** e non hanno voto inventato.
 
 ## Funzionalità
@@ -99,6 +115,35 @@ I contenuti non ancora usciti sono marcati **In arrivo** e non hanno voto invent
 - **Ordinamenti** — anno, ordine narrativo MCU, voto, titolo, stato visione
 - **Backup JSON** — esporta/importa; legge anche i backup dei formati precedenti
 - **Intro video** — disattivabile dal pannello Info
+- **Card condivisibili** — sette statistiche in formato 1080×1350, con le locandine
+  dei titoli segnati: ore guardate, completamento, universi, episodi, saghe, arco
+  temporale, quanto manca
+
+## Card condivisibili
+
+Il pulsante **Crea la tua card** nell'intestazione apre un selettore: si sceglie la
+statistica, si vede l'anteprima, si condivide. L'anteprima *è* l'immagine finale —
+lo stesso `wDrawCard()` disegna miniature e PNG, a scale diverse — quindi non possono
+divergere.
+
+Tre vincoli hanno deciso l'implementazione:
+
+- **Formato 1080×1350 (4:5).** Passa intero nel feed di Instagram e resta leggibile
+  in una storia. Il 1080×1920 nel feed verrebbe tagliato.
+- **`navigator.share` con i file** richiede HTTPS e in pratica esiste solo su mobile.
+  Altrove si ripiega sul download del PNG. Il file viene preparato all'apertura
+  dell'anteprima, non al clic su Condividi: Safari considera scaduto il gesto
+  dell'utente se nel mezzo c'è un'attesa e rifiuterebbe la condivisione.
+- **Le locandine vanno richieste in modalità CORS** (`crossorigin="anonymous"`),
+  altrimenti il canvas risulta *contaminato* e `toBlob()` fallisce. TMDB restituisce
+  `Access-Control-Allow-Origin: *`, quindi basta chiederlo — ma il flag deve stare su
+  **tutte** le richieste di locandine (`render.js`, `posters.js`, `wrapped.js`), perché
+  le cache confrontano per URL e non per modalità: una sola richiesta senza CORS
+  avvelenerebbe tutte le successive.
+
+Le statistiche non hanno una dimensione temporale: lo stato salvato è `visto/saltato`
+senza data, quindi si può dire *quanto* hai visto ma non *quando*. Per un vero "anno
+in review" servirebbe registrare un timestamp in `storage.js` da adesso in avanti.
 
 ## Note tecniche
 

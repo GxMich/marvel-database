@@ -4,14 +4,21 @@
 
    - SHELL: HTML, CSS, JS, icone. Cambiano ad ogni rilascio, quindi
      la cache è versionata e si svuota quando cambia VERSION.
-   - MEDIA: locandine TMDB e video di intro. Non cambiano mai e
-     pesano molto, quindi sopravvivono ai rilasci.
+   - MEDIA: il video di intro. Non cambia mai e pesa 8 MB, quindi
+     sopravvive ai rilasci.
+   - POSTER: le locandine TMDB. Stessa logica del video, ma con una
+     versione propria: dalla v2 vengono richieste in modalità CORS,
+     per poterle ridisegnare sul canvas delle card condivisibili.
+     Quelle salvate prima sono risposte opache e non servono più.
+     Tenendole in una cache separata si buttano via solo loro,
+     senza far riscaricare anche il video.
 
    Aggiornare VERSION ad ogni modifica di CSS/JS.
    ============================================================ */
-const VERSION     = 'v15';
-const SHELL_CACHE = `marvel-shell-${VERSION}`;
-const MEDIA_CACHE = 'marvel-media';
+const VERSION      = 'v16';
+const SHELL_CACHE  = `marvel-shell-${VERSION}`;
+const MEDIA_CACHE  = 'marvel-media';
+const POSTER_CACHE = 'marvel-posters-v2';
 
 /* percorsi relativi: funzionano sia in root sia in sottocartella
    (es. /marvel-database/ su GitHub Pages) */
@@ -24,6 +31,7 @@ const SHELL_ASSETS = [
   './css/layout.css',
   './css/components.css',
   './css/facets.css',
+  './css/wrapped.css',
   './css/responsive.css',
   './js/icons.js',
   './js/data/catalog.js',
@@ -35,6 +43,7 @@ const SHELL_ASSETS = [
   './js/ui.js',
   './js/intro.js',
   './js/legal.js',
+  './js/wrapped.js',
   './js/app.js',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
@@ -59,8 +68,17 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter(k => k.startsWith('marvel-shell-') && k !== SHELL_CACHE)
+      keys.filter(k =>
+            (k.startsWith('marvel-shell-')   && k !== SHELL_CACHE) ||
+            (k.startsWith('marvel-posters-') && k !== POSTER_CACHE))
           .map(k => caches.delete(k))
+    );
+    // la vecchia cache unica conteneva anche le locandine opache
+    const legacy = await caches.open(MEDIA_CACHE);
+    const stale = await legacy.keys();
+    await Promise.all(
+      stale.filter(req => new URL(req.url).hostname === 'image.tmdb.org')
+           .map(req => legacy.delete(req))
     );
     await self.clients.claim();
   })());
@@ -74,15 +92,27 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   /* Locandine TMDB: non cambiano mai. Prima la cache, e se manca si
-     scarica una volta sola. Così l'app funziona anche offline. */
+     scarica una volta sola. Così l'app funziona anche offline.
+
+     Si memorizzano solo le risposte CORS leggibili: una risposta opaca
+     verrebbe poi servita anche alle richieste CORS (la cache confronta
+     per URL, non per modalità) e contaminerebbe il canvas delle card. */
   if (url.hostname === 'image.tmdb.org') {
     event.respondWith((async () => {
-      const cache = await caches.open(MEDIA_CACHE);
+      const cache = await caches.open(POSTER_CACHE);
       const hit = await cache.match(request);
       if (hit) return hit;
       try {
-        const res = await fetch(request);
-        if (res.ok || res.type === 'opaque') cache.put(request, res.clone());
+        /* `cache: 'reload'` salta la cache HTTP del browser, che per chi
+           ha già visitato il sito contiene le stesse locandine scaricate
+           senza CORS. Riusate per una richiesta CORS darebbero un errore
+           di decodifica. Si paga un solo scaricamento, poi tutto arriva
+           da POSTER_CACHE. */
+        const res = await fetch(new Request(request, { cache: 'reload' }));
+        // il ripiego `cors=1` di wrapped.js è un secondo URL per la stessa
+        // immagine: memorizzarlo raddoppierebbe la cache senza guadagno
+        const isRetry = url.searchParams.has('cors');
+        if (res.ok && res.type !== 'opaque' && !isRetry) cache.put(request, res.clone());
         return res;
       } catch {
         return new Response('', { status: 504, statusText: 'Locandina non disponibile offline' });

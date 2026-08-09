@@ -1,0 +1,155 @@
+/* ============================================================
+   WRAPPED — selettore e anteprima delle card condivisibili
+   Le card in sé sono disegnate su canvas da js/wrapped.js: qui
+   c'è solo l'involucro che le presenta.
+   ============================================================ */
+
+/* ---------- pulsante di apertura, sotto la barra di avanzamento ---------- */
+.wrap-cta{
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+  padding: var(--sp-3) var(--sp-5);
+  border: 0;
+  border-radius: var(--r-full);
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-deep) 100%);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--track-snug);
+  cursor: pointer;
+  box-shadow: var(--e-red);
+  transition: transform var(--dur-1) var(--spring), box-shadow var(--dur-2) var(--ease-out);
+}
+.wrap-cta:hover{ transform: translateY(-2px); box-shadow: 0 6px 18px rgba(237,29,36,.45), 0 18px 44px rgba(237,29,36,.28); }
+.wrap-cta:active{ transform: translateY(0) scale(.97); }
+.wrap-cta .icon-svg{ width: 18px; height: 18px; }
+
+/* ---------- involucro ---------- */
+.wrap-modal{ max-width: 760px; }
+.wrap-intro{
+  color: var(--text-2);
+  font-size: var(--fs-body);
+  margin-bottom: var(--sp-5);
+}
+
+/* ---------- attesa: le locandine vanno lette dalla cache ---------- */
+.wrap-loading{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-12) var(--sp-5);
+  color: var(--text-2);
+  font-size: var(--fs-body);
+}
+.wrap-spinner{
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,.16);
+  border-top-color: var(--gold);
+  animation: wrap-spin .8s linear infinite;
+}
+@keyframes wrap-spin{ to{ transform: rotate(360deg); } }
+
+/* ---------- griglia delle miniature ---------- */
+.wrap-picker{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--sp-4);
+}
+
+.wrap-thumb{
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--r-md);
+  transition: transform var(--dur-1) var(--spring);
+}
+.wrap-thumb:hover{ transform: translateY(-3px); }
+.wrap-thumb:active{ transform: scale(.97); }
+
+.wrap-thumb canvas{
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-md);
+  box-shadow: var(--e2);
+}
+.wrap-thumb:hover canvas{ box-shadow: var(--e3); }
+
+.wrap-thumb-label{
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--text-2);
+  letter-spacing: var(--track-snug);
+  text-align: center;
+}
+.wrap-thumb:hover .wrap-thumb-label{ color: var(--text); }
+
+/* ---------- anteprima grande ---------- */
+.wrap-stage{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.wrap-canvas-holder{
+  width: 100%;
+  max-width: 340px;
+}
+.wrap-canvas{
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-lg);
+  box-shadow: var(--e4);
+}
+
+.wrap-actions{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  width: 100%;
+}
+.wrap-actions .btn{ flex: 1 1 auto; justify-content: center; }
+
+.wrap-note{
+  min-height: 1em;
+  font-size: var(--fs-body-sm);
+  color: var(--text-2);
+  text-align: center;
+  margin: 0;
+}
+
+/* ---------- nessun titolo segnato ---------- */
+.wrap-empty{
+  padding: var(--sp-10) var(--sp-5);
+  text-align: center;
+  color: var(--text-2);
+  font-size: var(--fs-body);
+}
+.wrap-empty .icon-svg{
+  width: 40px; height: 40px;
+  color: var(--gold);
+  margin-bottom: var(--sp-3);
+}
+.wrap-empty b{ color: var(--text); display: block; margin-bottom: var(--sp-2); font-size: var(--fs-lead); }
+
+/* ---------- mobile ---------- */
+@media (max-width: 560px){
+  .wrap-picker{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--sp-3); }
+  .wrap-canvas-holder{ max-width: 260px; }
+  /* i tre tasti in colonna: affiancati su schermo stretto diventano
+     bersagli troppo piccoli per il pollice */
+  .wrap-actions{ flex-direction: column; }
+  .wrap-actions .btn{ width: 100%; }
+}
