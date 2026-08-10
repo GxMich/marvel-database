@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#060608">
 <meta name="color-scheme" content="dark">
-<meta name="description" content="Archivio completo dei film e delle serie TV Marvel: MCU, Sony, Fox, Netflix e animazione.">
+<meta name="description" content="Archivio completo dei film e delle serie TV Marvel: MCU, Sony, Fox, Netflix e animazione. Trama, cast, trailer e stato di visione per 184 titoli.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,38 +18,49 @@
 <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
 <link rel="dns-prefetch" href="https://image.tmdb.org">
 
+<!-- I caratteri sono qui dentro, non su una rete esterna: senza
+     precaricamento il primo paint userebbe il ripiego di sistema e
+     poi salterebbe. Solo i due usati subito, testata e metadati. -->
+<link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
+
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png">
 
-<link rel="stylesheet" href="css/base.css?v=16">
-<link rel="stylesheet" href="css/intro.css?v=16">
-<link rel="stylesheet" href="css/layout.css?v=16">
-<link rel="stylesheet" href="css/components.css?v=16">
-<link rel="stylesheet" href="css/facets.css?v=16">
-<link rel="stylesheet" href="css/wrapped.css?v=16">
-<link rel="stylesheet" href="css/responsive.css?v=16">
+<link rel="stylesheet" href="css/base.css?v=17">
+<link rel="stylesheet" href="css/intro.css?v=17">
+<link rel="stylesheet" href="css/layout.css?v=17">
+<link rel="stylesheet" href="css/components.css?v=17">
+<link rel="stylesheet" href="css/facets.css?v=17">
+<link rel="stylesheet" href="css/responsive.css?v=17">
 
 <!-- Script classici con defer, non ES modules: i moduli sono bloccati
      dal protocollo file:// e il sito non si aprirebbe più con un doppio
      click. Con defer il download parte subito ma l'esecuzione avviene a
      parsing finito, quindi non bloccano mai il rendering. L'ordine è
-     garantito: i dati prima di chi li usa. -->
-<script defer src="js/icons.js?v=16"></script>
-<script defer src="js/data/catalog.js?v=16"></script>
-<script defer src="js/data/franchises.js?v=16"></script>
-<script defer src="js/storage.js?v=16"></script>
-<script defer src="js/posters.js?v=16"></script>
-<script defer src="js/render.js?v=16"></script>
-<script defer src="js/controls.js?v=16"></script>
-<script defer src="js/ui.js?v=16"></script>
-<script defer src="js/intro.js?v=16"></script>
-<script defer src="js/legal.js?v=16"></script>
-<script defer src="js/wrapped.js?v=16"></script>
-<script defer src="js/app.js?v=16"></script>
+     garantito: i dati prima di chi li usa.
+
+     js/data/details.js NON è qui: pesa 269 KB e serve solo a chi apre
+     una scheda. Lo carica js/details.js al primo click. -->
+<script defer src="js/icons.js?v=17"></script>
+<script defer src="js/data/catalog.js?v=17"></script>
+<script defer src="js/data/franchises.js?v=17"></script>
+<script defer src="js/storage.js?v=17"></script>
+<script defer src="js/posters.js?v=17"></script>
+<script defer src="js/render.js?v=17"></script>
+<script defer src="js/details.js?v=17"></script>
+<script defer src="js/controls.js?v=17"></script>
+<script defer src="js/ui.js?v=17"></script>
+<script defer src="js/intro.js?v=17"></script>
+<script defer src="js/legal.js?v=17"></script>
+<script defer src="js/app.js?v=17"></script>
 </head>
 <body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
 
 <div class="intro" id="intro">
   <!-- preload="metadata": del video (8 MB) si scarica solo l'intestazione,
@@ -63,7 +74,7 @@
     <source src="assets/video/marvel-intro.mp4" type="video/mp4">
   </video>
   <div class="intro-vignette"></div>
-  <button class="intro-skip" id="introSkip">SALTA <span id="introSkipIcon"></span></button>
+  <button class="intro-skip" id="introSkip">Salta <span id="introSkipIcon"></span></button>
   <div class="intro-loader">
     <div class="intro-loader-track"><div class="intro-loader-fill" id="introLoaderFill"></div></div>
   </div>
@@ -71,84 +82,115 @@
 
 <div class="site" id="site">
 
-<header class="hero">
-  <div class="brand"><span class="spark" id="sparkLeft"></span> MARVEL DATABASE <span class="spark" id="sparkRight"></span></div>
-  <p class="tagline">Film, serie TV e animazione — MCU, Sony, Fox, Netflix e oltre.</p>
+<!-- ============================================================
+     TESTATA
+     Una copertina, non un cruscotto: prima cos'è questo archivio,
+     poi con una riga di libro mastro a che punto sei.
+     ============================================================ -->
+<header class="masthead">
+  <div class="mast-bg" id="mastBg" aria-hidden="true"></div>
 
-  <div class="stats">
-    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Titoli</div></div>
-    <div class="stat-card"><div class="stat-num" id="statMovies">0</div><div class="stat-label">Film</div></div>
-    <div class="stat-card"><div class="stat-num" id="statSeries">0</div><div class="stat-label">Serie</div></div>
-    <div class="stat-card"><div class="stat-num" id="statWatched">0</div><div class="stat-label">Visti</div></div>
-    <div class="stat-card"><div class="stat-num" id="statSkipped">0</div><div class="stat-label">Saltati</div></div>
-    <div class="stat-card"><div class="stat-num" id="statRemaining">0</div><div class="stat-label">Da vedere</div></div>
+  <div class="overline">
+    <span><span class="dot"></span>Archivio Marvel — edizione italiana</span>
+    <span id="ovRange">1944 → 2027</span>
   </div>
 
-  <div class="progress-wrap">
-    <div class="progress-track" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-label">Completamento: <b id="progressPct">0%</b></div>
-  </div>
+  <h1 class="wordmark">Marvel<br><em>Database</em></h1>
+  <p class="subword">
+    <span>Film · Serie · Animazione</span>
+    <span class="plain">MCU, Sony, Fox, Netflix e oltre</span>
+  </p>
 
-  <button class="wrap-cta" id="wrapOpenBtn">Crea la tua card</button>
+  <div class="ledger">
+    <div class="led-item"><span class="led-num" id="statTotal">0</span><span class="led-lbl">Titoli</span></div>
+    <div class="led-item"><span class="led-num accent" id="statWatched">0</span><span class="led-lbl">Visti</span></div>
+    <div class="led-item"><span class="led-num" id="statSkipped">0</span><span class="led-lbl">Saltati</span></div>
+    <div class="led-item"><span class="led-num" id="statHours">0</span><span class="led-lbl">Ore</span></div>
+    <div class="led-bar">
+      <div class="bar" id="progressTrack"><i id="progressFill"></i></div>
+      <div class="bar-cap"><span>Completamento</span><span id="progressPct">0%</span></div>
+    </div>
+  </div>
 </header>
 
-<!-- barra appiccicata: resta in cima e sfoca ciò che le scorre sotto -->
-<div class="topbar" id="topbar">
-<div class="controls">
-  <div class="search-box">
-    <span class="search-icon" id="searchIconSlot"></span>
-    <input type="search" id="searchInput" placeholder="Cerca titolo, personaggio, franchise, anno…" autocomplete="off">
+<!-- ============================================================
+     BARRA COMANDI — una riga sola, appiccicata in alto
+     ============================================================ -->
+<div class="command" id="command">
+  <div class="command-in">
+    <label class="search">
+      <span id="searchIconSlot"></span>
+      <input type="search" id="searchInput" placeholder="Cerca titolo, personaggio, franchise, anno…" autocomplete="off" aria-label="Cerca">
+    </label>
+
+    <div class="sort-wrap">
+      <select id="sortSelect" aria-label="Ordinamento">
+        <option value="chrono">Anno di uscita</option>
+        <option value="story">Ordine narrativo MCU</option>
+        <option value="rating">Voto più alto</option>
+        <option value="title">Titolo (A-Z)</option>
+        <option value="year-desc">Più recenti</option>
+        <option value="watched">Stato visione</option>
+      </select>
+      <span class="chev" id="chevronSort" aria-hidden="true"></span>
+    </div>
+
+    <button class="cbtn" id="filterToggle" aria-label="Filtri">
+      <span class="lbl">Filtri</span><span class="n hide" id="filterCountBadge">0</span>
+    </button>
+
+    <span class="spacer"></span>
+
+    <button class="cbtn icon" id="settingsBtn" aria-label="Informazioni e backup"></button>
   </div>
-  <div class="select-wrap">
-    <span class="select-icon" id="sortIconSlot" aria-hidden="true"></span>
-    <select id="sortSelect" aria-label="Ordinamento">
-      <option value="chrono">Anno di uscita</option>
-      <option value="story">Ordine narrativo MCU</option>
-      <option value="rating">Voto più alto</option>
-      <option value="title">Titolo (A-Z)</option>
-      <option value="year-desc">Più recenti</option>
-      <option value="watched">Stato visione</option>
-    </select>
-    <span class="select-chevron" id="chevronSort"></span>
-  </div>
-  <button class="btn btn-filter" id="filterToggle" aria-label="Filtri"></button>
-  <button class="btn btn-ghost btn-settings" id="settingsBtn" aria-label="Informazioni e backup"></button>
 </div>
 
-<div class="quickbar">
-  <div class="quickbar-chips">
-    <div class="chip" data-filter-watch="unwatched" id="chipUnwatched">Da vedere</div>
-    <div class="chip" data-filter-watch="watched" id="chipWatched">Visti</div>
-    <div class="chip" data-filter-watch="skipped" id="chipSkippedFilter">Saltati</div>
-    <div class="chip chip-gold" id="chipEssential">Essenziali MCU</div>
-  </div>
-  <div class="quickbar-meta">
-    <span class="result-count" id="resultCount">0 titoli</span>
-  </div>
-</div>
-</div><!-- /.topbar -->
+<!-- ============================================================
+     COLONNA FILTRI + GRIGLIA
+     ============================================================ -->
+<div class="shell">
 
-<!-- Card fantasma: sono già nell'HTML, quindi compaiono al primo paint
-     senza aspettare il JavaScript. buildCards() le sostituisce con le
-     card vere. Hanno le stesse proporzioni, così il layout non salta. -->
-<main class="grid" id="grid">
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-  <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
-</main>
+  <!-- Su desktop i filtri sono qui e restano sempre visibili.
+       Sotto i 1180px questo blocco sparisce e lo stesso contenuto
+       viene spostato dentro il drawer (vedi js/controls.js). -->
+  <aside class="rail" id="filterRail" aria-label="Filtri"></aside>
+
+  <main>
+    <div class="grid-head">
+      <h2 id="gridTitle">Per anno di uscita</h2>
+      <span class="sub" id="resultCount">184 titoli</span>
+    </div>
+
+    <!-- Card fantasma: sono già nell'HTML, quindi compaiono al primo
+         paint senza aspettare il JavaScript. buildCards() le sostituisce
+         con le card vere. Hanno le stesse proporzioni, così il layout
+         non salta. -->
+    <div class="grid" id="grid">
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <div class="skel" aria-hidden="true"><div class="skel-poster"></div><div class="skel-body"><span class="skel-line w60"></span><span class="skel-line w40"></span></div></div>
+      <noscript>
+        <p class="js-off">
+          Le card si costruiscono in JavaScript e qui non sta girando.<br>
+          <b>Attiva JavaScript</b> per vedere l'archivio.
+        </p>
+      </noscript>
+    </div>
+  </main>
+</div>
 
 <footer>
   I titoli segnati restano salvati in questo browser. Backup ed esportazione si trovano nel pannello <b>Info</b>, in alto a destra.<br>
-  Dati e locandine forniti da <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>. Questo progetto usa le API di TMDB ma non è approvato o certificato da TMDB.<br>
+  Dati, locandine, trame, cast e trailer forniti da <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>. Questo progetto usa le API di TMDB ma non è approvato o certificato da TMDB.<br>
   Fasi MCU, ordine narrativo e tag "Essenziale" sono una curatela editoriale, non un dato ufficiale Marvel.<br>
   Progetto fan non ufficiale — Marvel e i personaggi correlati sono marchi Marvel/Disney.
   <span class="footer-links">
@@ -160,17 +202,21 @@
 
 </div><!-- /.site -->
 
-<!-- pannello filtri: colonna laterale su desktop, drawer dal basso su mobile -->
-<div class="filter-panel-wrap" id="filterPanelWrap">
-  <aside class="filter-sheet" role="dialog" aria-modal="true" aria-label="Filtri">
-    <header class="filter-sheet-head">
-      <span class="filter-sheet-grab"></span>
+<!-- ============================================================
+     DRAWER FILTRI (solo sotto i 1180px)
+     Il contenuto viene spostato qui da js/controls.js: i filtri
+     esistono una volta sola nel DOM, cambia solo dove stanno.
+     ============================================================ -->
+<div class="facet-wrap" id="facetWrap">
+  <aside class="facet-sheet" role="dialog" aria-modal="true" aria-label="Filtri">
+    <header class="facet-sheet-head">
+      <span class="facet-grab"></span>
       <h2>Filtri</h2>
       <button class="modal-close" id="filterCloseBtn" aria-label="Chiudi filtri"></button>
     </header>
-    <div class="filter-panel" id="filterPanel"></div>
-    <footer class="filter-sheet-foot">
-      <button class="btn btn-ghost" id="filterResetBtn">Azzera filtri</button>
+    <div class="facet-sheet-body" id="facetDrawerBody"></div>
+    <footer class="facet-sheet-foot">
+      <button class="btn" id="filterResetBtn">Azzera</button>
       <button class="btn btn-primary" id="filterApplyBtn">Vedi risultati</button>
     </footer>
   </aside>
@@ -179,21 +225,27 @@
 <button class="scrolltop" id="scrollTopBtn" aria-label="Torna su"></button>
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
+<!-- ============================================================
+     SCHEDA TITOLO
+     Il contenuto lo scrive js/ui.js con i dati di details.js,
+     caricato alla prima apertura.
+     ============================================================ -->
+<div class="sheet-bg" id="sheetBg"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Scheda del titolo"></aside>
+
+<!-- ============================================================
+     INFO E BACKUP
+     ============================================================ -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <button class="modal-close" id="modalCloseBtn" aria-label="Chiudi"></button>
-    <h2 id="modalTitle"><span id="modalTitleIcon"></span> L'archivio</h2>
+    <h2 id="modalTitle">L'archivio</h2>
     <p>
       Un catalogo Marvel che va oltre l'MCU: include Sony, Fox, le serie Netflix,
       i film TV storici e tutta l'animazione. Dati e locandine arrivano da TMDB e
       sono già inclusi nel progetto, quindi la pagina si apre senza attese.
     </p>
-    <div class="modal-stat-row">
-      <div class="modal-stat"><div class="modal-stat-num" id="modalTotalNum">0</div><div class="modal-stat-lbl">Titoli</div></div>
-      <div class="modal-stat"><div class="modal-stat-num" id="modalMoviesNum">0</div><div class="modal-stat-lbl">Film</div></div>
-      <div class="modal-stat"><div class="modal-stat-num" id="modalSeriesNum">0</div><div class="modal-stat-lbl">Serie</div></div>
-      <div class="modal-stat"><div class="modal-stat-num" id="modalUniverseNum">0</div><div class="modal-stat-lbl">Universi</div></div>
-    </div>
+
     <label class="switch-row" for="introToggle">
       <span>Mostra il video di intro all'avvio</span>
       <input type="checkbox" id="introToggle" checked>
@@ -201,57 +253,18 @@
     </label>
 
     <h3 class="modal-subtitle">Backup della tua lista</h3>
-    <p class="modal-note">
+    <p>
       I titoli segnati restano su questo dispositivo. Esporta un file JSON per
       conservarli o spostarli su un altro browser.
     </p>
     <div class="modal-actions">
       <button class="btn btn-primary" id="exportBtn"></button>
-      <button class="btn btn-gold" id="importBtn"></button>
+      <button class="btn" id="importBtn"></button>
     </div>
     <input type="file" id="fileInput" accept="application/json">
-    <button class="btn btn-ghost btn-danger" id="resetBtn"></button>
+    <button class="btn btn-danger" id="resetBtn"></button>
 
     <div class="modal-status" id="modalStatus"></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     WRAPPED — card condivisibili
-     Le anteprime sono <canvas> generati da js/wrapped.js: quello che
-     si vede è esattamente il PNG che viene condiviso.
-     ============================================================ -->
-<div class="modal-backdrop" id="wrapBackdrop">
-  <div class="modal wrap-modal" role="dialog" aria-modal="true" aria-labelledby="wrapTitle">
-    <button class="modal-close" id="wrapCloseBtn" aria-label="Chiudi"></button>
-    <h2 id="wrapTitle"><span id="wrapTitleIcon"></span> Il tuo Marvel</h2>
-
-    <p class="wrap-intro" id="wrapIntro">
-      I numeri vengono dai titoli che hai segnato su questo dispositivo.
-      Scegli la card che ti somiglia di più.
-    </p>
-
-    <div class="wrap-empty" id="wrapEmpty" hidden>
-      <span id="wrapEmptyIcon"></span>
-      <b>Non hai ancora segnato niente</b>
-      Segna qualche titolo come visto e qui compariranno le tue statistiche.
-    </div>
-
-    <div class="wrap-loading" id="wrapLoading" hidden>
-      <span class="wrap-spinner"></span> Preparo le tue card…
-    </div>
-
-    <div class="wrap-picker" id="wrapPicker" hidden></div>
-
-    <div class="wrap-stage" id="wrapStage" hidden>
-      <div class="wrap-canvas-holder" id="wrapCanvasHolder"></div>
-      <div class="wrap-actions">
-        <button class="btn btn-primary" id="wrapShareBtn"></button>
-        <button class="btn btn-gold" id="wrapDownloadBtn"></button>
-        <button class="btn btn-ghost" id="wrapBackBtn">Scegli un'altra</button>
-      </div>
-      <p class="wrap-note" id="wrapNote"></p>
-    </div>
   </div>
 </div>
 
@@ -312,14 +325,20 @@
       </p>
       <ul>
         <li>
-          <strong>Locandine.</strong> Le immagini sono caricate dai server di
+          <strong>Immagini.</strong> Locandine, sfondi e foto del cast sono caricate
+          dai server di
           <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
           (<em>image.tmdb.org</em>). Come accade con qualunque immagine di terze parti,
           i loro server ricevono la richiesta e quindi il tuo indirizzo IP e il tipo di
           browser. Vale la
           <a href="https://www.themoviedb.org/privacy-policy" target="_blank" rel="noopener">privacy policy di TMDB</a>.
-          Dopo la prima visita le locandine sono conservate nella cache del sito e non
+          Dopo la prima visita le immagini sono conservate nella cache del sito e non
           vengono più richieste.
+        </li>
+        <li>
+          <strong>Trailer.</strong> Il pulsante <em>Trailer</em> nelle schede apre
+          YouTube in una scheda nuova. Nessun video viene incorporato in questa pagina,
+          quindi finché non lo premi tu YouTube non riceve nulla.
         </li>
         <li>
           <strong>Hosting.</strong> Il sito è pubblicato su GitHub Pages, che come ogni
@@ -386,8 +405,8 @@
 
       <h3>Fonte dei dati</h3>
       <p>
-        Le informazioni sulle opere (titoli, date, durate, voti, trame) e le locandine
-        provengono dalle API di
+        Le informazioni sulle opere (titoli, date, durate, voti, trame, cast, trailer) e
+        le immagini provengono dalle API di
         <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
         e sono usate nel rispetto delle loro
         <a href="https://www.themoviedb.org/api-terms-of-use" target="_blank" rel="noopener">condizioni d'uso</a>.
@@ -409,9 +428,9 @@
       <h3>Uso consentito</h3>
       <p>
         Il sito è destinato all'uso personale come strumento di consultazione e per tenere
-        traccia delle opere viste. Non fornisce, non ospita e non collega contenuti in
-        streaming: le indicazioni sulle piattaforme sono informative e possono variare per
-        paese e nel tempo.
+        traccia delle opere viste. Non fornisce, non ospita e non incorpora contenuti in
+        streaming: i trailer aprono YouTube in una scheda separata, e le indicazioni sulle
+        piattaforme sono informative e possono variare per paese e nel tempo.
       </p>
 
       <h3>I tuoi dati sono responsabilità tua</h3>

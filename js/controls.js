@@ -1,11 +1,12 @@
 /* ==========================================================
-   CONTROLLI: ricerca, pannello filtri, export/import
+   CONTROLLI: ricerca, filtri, export/import
+
+   I filtri esistono UNA volta sola nel DOM. Su desktop stanno
+   nella colonna laterale, sotto i 1180px vengono spostati dentro
+   il drawer: costruirli due volte vorrebbe dire tenere allineati
+   due insiemi di pulsanti per gli stessi dati.
    ========================================================== */
 
-/* --- costruzione dinamica dei gruppi di filtro dal catalogo --- */
-function uniqueSorted(values){
-  return [...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
-}
 function countBy(getter){
   const m = new Map();
   ITEMS.forEach(it=>{
@@ -16,76 +17,96 @@ function countBy(getter){
   });
   return m;
 }
+function optionsFrom(getter, label){
+  return [...countBy(getter).entries()]
+    .sort((a,b)=> b[1]-a[1] || String(a[0]).localeCompare(String(b[0])))
+    .map(([v,n])=>({ value:v, label:label ? label(v) : v, count:n }));
+}
+
+const YEARS = ITEMS.map(i=>i.year);
+const MIN_YEAR = Math.min(...YEARS);
+const MAX_YEAR = Math.max(...YEARS);
+
+let facetGroups = null;   // il contenitore che viaggia fra colonna e drawer
 
 function buildFilterPanel(){
-  const panel = document.getElementById('filterPanel');
-
   const groups = [
     {
-      key:'universe', title:'Universo', multi:true,
-      options: uniqueSorted(ITEMS.map(i=>i.universe)).map(v=>({value:v, label:v})),
-    },
-    {
-      key:'type', title:'Tipo di contenuto', multi:true,
-      options: uniqueSorted(ITEMS.map(i=>i.type)).map(v=>({value:v, label:TYPE_LABEL[v]||v})),
-    },
-    {
-      key:'medium', title:'Formato', multi:false,
-      options: [
-        {value:'all', label:'Tutti'},
-        {value:'live-action', label:'Live action'},
-        {value:'animation', label:'Animazione'},
+      key:'watch', title:'Visione', multi:false, live:true,
+      options:[
+        {value:'unwatched', label:'Da vedere'},
+        {value:'watched',   label:'Visti'},
+        {value:'skipped',   label:'Saltati'},
       ],
     },
+    { key:'universe', title:'Universo', multi:true, options: optionsFrom(i=>i.universe) },
+    { key:'type', title:'Tipo', multi:true, options: optionsFrom(i=>i.type, v=>TYPE_LABEL[v]||v) },
     {
-      key:'status', title:'Stato', multi:true,
-      options: uniqueSorted(ITEMS.map(i=>i.status)).map(v=>({value:v, label:STATUS_LABEL[v]||v})),
+      key:'medium', title:'Formato', multi:false,
+      options:[
+        {value:'live-action', label:'Live action', count: ITEMS.filter(i=>i.medium==='live-action').length},
+        {value:'animation',   label:'Animazione',  count: ITEMS.filter(i=>i.medium==='animation').length},
+      ],
     },
-    {
-      key:'phase', title:'Fase MCU', multi:true,
-      options: uniqueSorted(ITEMS.map(i=>i.phase)).map(v=>({value:v, label:'Fase '+v})),
-    },
-    {
-      key:'franchise', title:'Franchise', multi:true, scroll:true,
-      options: [...countBy(i=>i.franchise).entries()]
-        .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]))
-        .map(([v,n])=>({value:v, label:v, count:n})),
-    },
-    {
-      key:'character', title:'Personaggi', multi:true, scroll:true,
-      options: [...countBy(i=>i.characters).entries()]
-        .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]))
-        .map(([v,n])=>({value:v, label:v, count:n})),
-    },
+    { key:'status', title:'Stato', multi:true, options: optionsFrom(i=>i.status, v=>STATUS_LABEL[v]||v) },
+    { key:'phase', title:'Fase MCU', multi:true, options: optionsFrom(i=>i.phase, v=>'Fase '+v) },
+    { key:'franchise', title:'Franchise', multi:true, scroll:true, options: optionsFrom(i=>i.franchise) },
+    { key:'character', title:'Personaggi', multi:true, scroll:true, options: optionsFrom(i=>i.characters) },
   ];
 
-  const years = ITEMS.map(i=>i.year);
-  const minY = Math.min(...years), maxY = Math.max(...years);
+  facetGroups = document.createElement('div');
+  facetGroups.id = 'facetGroups';
 
-  panel.innerHTML = groups.map(g=>`
-    <section class="fgroup" data-group="${g.key}">
-      <h3 class="fgroup-title">${g.title}</h3>
-      <div class="fgroup-opts ${g.scroll?'is-scroll':''}">
-        ${g.options.map(o=>`
-          <button class="fchip" data-key="${g.key}" data-value="${o.value}" data-multi="${g.multi}">
-            ${o.label}${o.count?`<span class="fchip-n">${o.count}</span>`:''}
-          </button>`).join('')}
-      </div>
-    </section>`).join('') + `
-    <section class="fgroup">
-      <h3 class="fgroup-title">Anno <span class="fgroup-hint" id="yearHint">${minY}–${maxY}</span></h3>
-      <div class="year-range">
-        <input type="range" id="yearMin" min="${minY}" max="${maxY}" value="${minY}" step="1" aria-label="Anno minimo">
-        <input type="range" id="yearMax" min="${minY}" max="${maxY}" value="${maxY}" step="1" aria-label="Anno massimo">
-      </div>
-    </section>`;
+  /* L'ordinamento vive nella barra comandi, ma sotto i 720px la barra
+     non ha spazio per cinque controlli e la <select> sparisce: qui c'è
+     il suo doppio, nascosto su desktop dal CSS. Senza, su telefono
+     l'ordinamento sarebbe semplicemente irraggiungibile. */
+  const sortSection = `
+      <section class="facet facet-sort">
+        <h3 class="facet-title">Ordina per</h3>
+        <div class="facet-opts">
+          ${Object.entries(SORT_LABEL).map(([v,l])=>`
+            <button class="fopt fsort" data-sort="${v}" aria-pressed="${v===sortMode}">
+              <span class="t">${l}</span>
+            </button>`).join('')}
+        </div>
+      </section>`;
 
-  // selezione singola/multipla
-  panel.querySelectorAll('.fchip').forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const key = chip.dataset.key;
-      const multi = chip.dataset.multi === 'true';
-      let value = chip.dataset.value;
+  facetGroups.innerHTML = sortSection +
+    groups.map(g=>`
+      <section class="facet" data-group="${g.key}">
+        <h3 class="facet-title">${g.title}</h3>
+        <div class="facet-opts ${g.scroll?'is-scroll':''}">
+          ${g.options.map(o=>`
+            <button class="fopt" data-key="${g.key}" data-value="${escapeHtml(String(o.value))}" data-multi="${g.multi}" aria-pressed="false">
+              <span class="t">${escapeHtml(o.label)}</span>
+              <span class="c"${g.live?' data-live="'+o.value+'"':''}>${o.count ?? ''}</span>
+            </button>`).join('')}
+        </div>
+      </section>`).join('') + `
+      <section class="facet">
+        <h3 class="facet-title">Curatela</h3>
+        <div class="facet-opts">
+          <button class="fopt" id="optEssential" aria-pressed="false">
+            <span class="t">Solo gli essenziali MCU</span>
+            <span class="c">${ITEMS.filter(i=>i.essential).length}</span>
+          </button>
+        </div>
+      </section>
+      <section class="facet">
+        <h3 class="facet-title">Anno <span class="c" id="yearHint">${MIN_YEAR}–${MAX_YEAR}</span></h3>
+        <div class="year-range">
+          <input type="range" id="yearMin" min="${MIN_YEAR}" max="${MAX_YEAR}" value="${MIN_YEAR}" step="1" aria-label="Anno minimo">
+          <input type="range" id="yearMax" min="${MIN_YEAR}" max="${MAX_YEAR}" value="${MAX_YEAR}" step="1" aria-label="Anno massimo">
+        </div>
+      </section>
+      <button class="facet-reset" id="railResetBtn">Azzera i filtri</button>`;
+
+  facetGroups.querySelectorAll('.fopt[data-key]').forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      const key = opt.dataset.key;
+      const multi = opt.dataset.multi === 'true';
+      let value = opt.dataset.value;
       if(key === 'phase') value = Number(value);
 
       if(multi){
@@ -100,47 +121,104 @@ function buildFilterPanel(){
     });
   });
 
-  // range anni
-  const yMin = document.getElementById('yearMin');
-  const yMax = document.getElementById('yearMax');
+  facetGroups.querySelectorAll('.fsort').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      sortMode = btn.dataset.sort;
+      document.getElementById('sortSelect').value = sortMode;
+      syncFilterUI();
+      render();
+    });
+  });
+
+  facetGroups.querySelector('#optEssential').addEventListener('click', ()=>{
+    filters.essentialOnly = !filters.essentialOnly;
+    syncFilterUI();
+    render();
+  });
+
+  facetGroups.querySelector('#railResetBtn').addEventListener('click', ()=>{
+    resetFilters();
+    syncFilterUI();
+    render();
+    showToast('Filtri azzerati.');
+  });
+
+  const yMin = facetGroups.querySelector('#yearMin');
+  const yMax = facetGroups.querySelector('#yearMax');
   const onYear = ()=>{
     let a = Number(yMin.value), b = Number(yMax.value);
     if(a > b){ [a,b] = [b,a]; }
-    filters.yearMin = (a === minY) ? null : a;
-    filters.yearMax = (b === maxY) ? null : b;
-    document.getElementById('yearHint').textContent = `${a}–${b}`;
+    filters.yearMin = (a === MIN_YEAR) ? null : a;
+    filters.yearMax = (b === MAX_YEAR) ? null : b;
+    facetGroups.querySelector('#yearHint').textContent = `${a}–${b}`;
     render();
   };
   yMin.addEventListener('input', onYear);
   yMax.addEventListener('input', onYear);
+
+  placeFilters();
 }
 
-/* riallinea lo stato visivo dei chip a `filters` */
+/* ---------- colonna o drawer, secondo lo spazio ---------- */
+const wideScreen = window.matchMedia('(min-width: 1181px)');
+
+function placeFilters(){
+  if(!facetGroups) return;
+  const host = wideScreen.matches
+    ? document.getElementById('filterRail')
+    : document.getElementById('facetDrawerBody');
+  if(host && facetGroups.parentNode !== host) host.appendChild(facetGroups);
+  // passando alla colonna il drawer non deve restare aperto sotto
+  if(wideScreen.matches) closeFilters();
+}
+wideScreen.addEventListener('change', placeFilters);
+
+/* riallinea lo stato visivo delle opzioni a `filters` */
 function syncFilterUI(){
-  document.querySelectorAll('.fchip').forEach(chip=>{
-    const key = chip.dataset.key;
-    const multi = chip.dataset.multi === 'true';
-    let value = chip.dataset.value;
+  if(!facetGroups) return;
+
+  facetGroups.querySelectorAll('.fopt[data-key]').forEach(opt=>{
+    const key = opt.dataset.key;
+    const multi = opt.dataset.multi === 'true';
+    let value = opt.dataset.value;
     if(key === 'phase') value = Number(value);
     const on = multi ? filters[key].includes(value) : filters[key] === value;
-    chip.classList.toggle('active', on);
+    opt.classList.toggle('active', on);
+    opt.setAttribute('aria-pressed', on);
   });
-  document.querySelectorAll('[data-filter-watch]').forEach(c=>{
-    c.classList.toggle('active', filters.watch === c.dataset.filterWatch);
+
+  facetGroups.querySelectorAll('.fsort').forEach(btn=>{
+    const on = btn.dataset.sort === sortMode;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', on);
   });
-  const ess = document.getElementById('chipEssential');
-  if(ess) ess.classList.toggle('active', filters.essentialOnly);
+
+  const ess = facetGroups.querySelector('#optEssential');
+  ess.classList.toggle('active', filters.essentialOnly);
+  ess.setAttribute('aria-pressed', filters.essentialOnly);
+
+  // i conteggi della visione cambiano man mano che segni i titoli
+  const live = { watched:0, skipped:0, unwatched:0 };
+  ITEMS.forEach(i=>{
+    const s = getStatus(i.id);
+    if(s === 'watched') live.watched++;
+    else if(s === 'skipped') live.skipped++;
+    else live.unwatched++;
+  });
+  facetGroups.querySelectorAll('[data-live]').forEach(el=>{
+    el.textContent = live[el.dataset.live];
+  });
 
   const si = document.getElementById('searchInput');
   if(si && si.value !== filters.query) si.value = filters.query;
 
-  const yMin = document.getElementById('yearMin');
-  const yMax = document.getElementById('yearMax');
+  const yMin = facetGroups.querySelector('#yearMin');
+  const yMax = facetGroups.querySelector('#yearMax');
   if(yMin && yMax){
-    const lo = filters.yearMin ?? Number(yMin.min);
-    const hi = filters.yearMax ?? Number(yMax.max);
+    const lo = filters.yearMin ?? MIN_YEAR;
+    const hi = filters.yearMax ?? MAX_YEAR;
     yMin.value = lo; yMax.value = hi;
-    document.getElementById('yearHint').textContent = `${lo}–${hi}`;
+    facetGroups.querySelector('#yearHint').textContent = `${lo}–${hi}`;
   }
 }
 
@@ -152,53 +230,51 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   searchTimer = setTimeout(()=>{ filters.query = val; render(); }, 130);
 });
 
+/* "/" porta il cursore nella ricerca, come in mezzo mondo — ma non
+   mentre si sta già scrivendo da qualche altra parte. */
+document.addEventListener('keydown', (e)=>{
+  if(e.key !== '/' || e.metaKey || e.ctrlKey) return;
+  const t = e.target;
+  if(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return;
+  e.preventDefault();
+  document.getElementById('searchInput').focus();
+});
+
 document.getElementById('sortSelect').addEventListener('change', (e)=>{
   sortMode = e.target.value;
+  syncFilterUI();   // il doppione nel drawer deve seguire
   render();
 });
 
-/* --- chip rapidi sempre visibili --- */
-document.querySelectorAll('[data-filter-watch]').forEach(chip=>{
-  chip.addEventListener('click', ()=>{
-    const v = chip.dataset.filterWatch;
-    filters.watch = (filters.watch === v) ? 'all' : v;
-    syncFilterUI();
-    render();
-  });
-});
-document.getElementById('chipEssential').addEventListener('click', ()=>{
-  filters.essentialOnly = !filters.essentialOnly;
-  syncFilterUI();
-  render();
-});
-
-/* --- apertura/chiusura pannello filtri --- */
-const filterPanelWrap = document.getElementById('filterPanelWrap');
+/* --- drawer dei filtri (solo sotto i 1180px) --- */
+const facetWrap = document.getElementById('facetWrap');
 function openFilters(){
-  filterPanelWrap.classList.add('open');
+  facetWrap.classList.add('open');
   document.body.classList.add('no-scroll');
 }
 function closeFilters(){
-  filterPanelWrap.classList.remove('open');
+  facetWrap.classList.remove('open');
   document.body.classList.remove('no-scroll');
 }
 document.getElementById('filterToggle').addEventListener('click', ()=>{
-  filterPanelWrap.classList.contains('open') ? closeFilters() : openFilters();
+  facetWrap.classList.contains('open') ? closeFilters() : openFilters();
 });
 document.getElementById('filterCloseBtn').addEventListener('click', closeFilters);
-filterPanelWrap.addEventListener('click', (e)=>{ if(e.target === filterPanelWrap) closeFilters(); });
+facetWrap.addEventListener('click', (e)=>{ if(e.target === facetWrap) closeFilters(); });
+document.getElementById('filterApplyBtn').addEventListener('click', closeFilters);
 document.getElementById('filterResetBtn').addEventListener('click', ()=>{
   resetFilters();
   syncFilterUI();
   render();
   showToast('Filtri azzerati.');
 });
-document.getElementById('filterApplyBtn').addEventListener('click', closeFilters);
 
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(confirm('Vuoi azzerare tutti i titoli segnati come visti o saltati? Il backup JSON già esportato non viene toccato.')){
     state.status = {};
     saveState();
+    buildCards();
+    syncFilterUI();
     render();
     showToast('Elenco visti/saltati azzerato.');
   }
@@ -256,6 +332,10 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
         }
       });
       saveState();
+      // le card portano lo stato nel markup: vanno ricostruite, non
+      // basta rifiltrare
+      buildCards();
+      syncFilterUI();
       render();
       showToast(`Backup importato: ${count} titoli ripristinati.`);
     }catch(err){

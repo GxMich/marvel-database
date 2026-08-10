@@ -28,13 +28,14 @@ function applyPosterToCard(id, url){
 /* Precarica le immagini nella cache HTTP del browser.
    onProgress(fatte, totale) alimenta la barra dell'intro.
 
-   crossOrigin='anonymous' non serve a mostrare le locandine, serve a
-   poterle poi RIDISEGNARE su un canvas (le card condivisibili). Una
-   risposta ottenuta senza CORS è "opaca": il browser la mostra ma
-   marchia il canvas come contaminato e ne blocca l'esportazione. E
-   poiché la cache risponde per URL, basterebbe una sola richiesta
-   senza CORS per avvelenare tutte le successive: per questo il flag
-   sta sia qui sia sulle <img> delle card. */
+   crossOrigin='anonymous' nacque per le card condivisibili, che non
+   ci sono più: servivano risposte leggibili per non contaminare il
+   canvas. Il flag però resta, e non per inerzia — le cache (quella
+   del browser e quella del service worker) confrontano per URL e non
+   per modalità, quindi togliendolo le locandine già salvate in
+   modalità CORS convivrebbero con nuove risposte opache per lo stesso
+   indirizzo. Costa zero, perché TMDB manda `Access-Control-Allow-Origin: *`,
+   ed evita di invalidare 184 immagini già sui dispositivi. */
 function preloadPosters(items, onProgress){
   const urls = items.map(i=>posterUrl(i)).filter(Boolean);
   return new Promise(resolve=>{

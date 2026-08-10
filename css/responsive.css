@@ -1,205 +1,123 @@
 /* ============================================================
-   RESPONSIVE
+   ADATTAMENTO E PRESTAZIONI
+   Ultimo foglio caricato: qui stanno solo le correzioni che
+   devono vincere sulle regole precedenti.
    ============================================================ */
 
-/* ---------- tablet / laptop stretto ---------- */
-@media (max-width: 1024px){
-  .stats{ max-width: 640px; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--sp-2); }
-  .grid{ grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--sp-4); }
+/* ------------------------------------------------------------
+   SOTTO I 1181px — via la colonna filtri
+   Lo spazio per una colonna laterale non c'è più: i filtri
+   tornano a essere un drawer, e la griglia prende tutta la
+   larghezza.
+   ------------------------------------------------------------ */
+@media (max-width:1180px){
+  :root{ --rail:0px; }
+  .shell{ grid-template-columns:1fr; gap:0; }
+  .rail{ display:none; }
+}
+/* Sopra i 1180px il pulsante "Filtri" non serve: la colonna
+   è già lì, aprirebbe un doppione. */
+@media (min-width:1181px){
+  #filterToggle{ display:none; }
 }
 
-/* ---------- niente hover sui dispositivi a tocco ----------
-   Su touch :hover resta "incollato" dopo il tap: qui si tiene
-   solo la risposta alla pressione. */
-@media (hover: none){
-  .card:hover{ transform: none; box-shadow: var(--e1); }
-  .card:hover .sheen{ transform: translateX(-120%); }
-  .card:active{ transform: scale(.97); }
-  .chip:hover, .btn:hover, .fchip:hover, select:hover{ transform: none; }
-  .stat-card:hover{ transform: none; background: var(--surface-2); box-shadow: var(--e1); }
+/* ------------------------------------------------------------
+   TABLET
+   ------------------------------------------------------------ */
+@media (max-width:900px){
+  .masthead{ padding:var(--sp-6) var(--sp-6) var(--sp-5); }
+  .command-in,.shell{ padding-left:var(--sp-6); padding-right:var(--sp-6); }
+  footer{ padding-left:var(--sp-6); padding-right:var(--sp-6); }
+  .ledger{ gap:var(--sp-5) var(--sp-8); }
+  .led-num{ font-size:29px; }
+  .sheet{ width:min(560px, 100vw); }
 }
 
-/* ---------- mobile ---------- */
-@media (max-width: 640px){
-  .hero{ padding: calc(var(--sp-10) + var(--sat)) var(--sp-4) var(--sp-6); }
-  .brand{ gap: var(--sp-2); }
-  .tagline{ font-size: var(--fs-body); }
+/* ------------------------------------------------------------
+   TELEFONO
+   ------------------------------------------------------------ */
+@media (max-width:720px){
+  .masthead{ padding:var(--sp-6) var(--sp-5) var(--sp-4); }
+  .command-in{ height:56px; gap:6px; padding:0 var(--sp-5); }
+  .shell{ padding:var(--sp-6) var(--sp-5) var(--sp-12); }
+  footer{ padding:var(--sp-8) var(--sp-5) calc(var(--sp-12) + var(--sab)); }
 
-  .stats{
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap: var(--sp-2);
-    padding: 0 var(--sp-4);
-    margin-top: var(--sp-6);
-  }
-  .stat-card{ padding: var(--sp-3) var(--sp-1); border-radius: var(--r-sm); }
-  .stat-num{ font-size: var(--fs-title); }
-  .stat-label{ font-size: 9px; letter-spacing: var(--track-wide); }
+  .grid{ grid-template-columns:repeat(auto-fill, minmax(142px, 1fr)); gap:var(--sp-5) var(--sp-3); }
+  .card{ contain-intrinsic-size:auto 268px; }
 
-  .progress-wrap{ margin-top: var(--sp-5); padding: 0 var(--sp-4); }
+  .ledger{ margin-top:var(--sp-6); gap:var(--sp-5) var(--sp-6); }
+  .led-num{ font-size:26px; }
+  .led-bar{ flex-basis:100%; }
+  .subword{ letter-spacing:.3em; }
 
-  /* Barra compatta: tutto su una riga sola. Ordinamento, filtri e info
-     diventano bottoni-icona da 46px, il resto è ricerca. */
-  .controls{
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: var(--sp-2);
-    padding: var(--sp-2) var(--sp-4);
-  }
-  .search-box{ flex: 1 1 auto; min-width: 0; }
-  .search-box input{ padding: var(--sp-3) var(--sp-3) var(--sp-3) 38px; }
+  /* Cinque controlli in una riga da 390px non ci stanno senza
+     schiacciare la ricerca: le etichette spariscono e
+     l'ordinamento passa dentro il pannello filtri. */
+  .cbtn .lbl{ display:none; }
+  .cbtn{ padding:0 var(--sp-3); }
+  .sort-wrap{ display:none; }
+  /* ...e riappare come primo gruppo del pannello filtri */
+  .facet-sort{ display:block; padding-top:0; border-top:0; }
+  .facet-sort + .facet{ padding-top:var(--sp-4); border-top:1px solid var(--line); }
 
-  /* il select resta funzionante (apre il selettore nativo) ma diventa
-     invisibile: sopra ci sta solo l'icona */
-  .select-wrap{ flex: 0 0 46px; width: 46px; height: 46px; }
-  .select-wrap select{
-    width: 46px; height: 46px;
-    padding: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .select-icon{ display: flex; }
-  .select-chevron{ display: none; }
-  /* lo sfondo del bottone lo disegna il contenitore, non il select */
-  .select-wrap::before{
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: var(--r-sm);
-    background: rgba(255,255,255,.07);
-    box-shadow: inset 0 0 0 .5px var(--hairline-soft);
-    pointer-events: none;
-  }
+  /* Il tocco non ha un "sopra". I pulsanti restano quindi sempre
+     visibili, ma il velo con i metadati no: titolo, anno e voto
+     stanno già sotto la locandina e ripeterli la coprirebbe. */
+  .acts{ opacity:1; transform:none; }
+  .act{ width:29px; height:29px; }
+  .scrim,.idx{ display:none; }
 
-  .btn-filter, .btn-settings{
-    flex: 0 0 46px;
-    width: 46px; height: 46px;
-    padding: 0;
-    justify-content: center;
+  /* la scheda entra dal basso, non da destra */
+  .sheet{
+    top:auto; left:0; right:0; bottom:0;
+    width:100%;
+    max-height:92dvh;
+    border-left:0;
+    border-top:1px solid var(--line);
+    border-radius:var(--r-xl) var(--r-xl) 0 0;
+    transform:translateY(100%);
   }
-  /* solo icone: le etichette testuali sparirebbero comunque per spazio */
-  .btn-filter .lbl-long, .btn-filter .lbl-short,
-  .btn-settings .lbl-long, .btn-settings .lbl-short{ display: none; }
-  /* il contatore dei filtri si sposta ad angolo, come una notifica */
-  .btn-filter .filter-badge.show{
-    position: absolute;
-    top: -4px; right: -4px;
-    box-shadow: 0 0 0 2px #0C0C0E;
-  }
-  .lbl-long{ display: none; }
-  .lbl-short{ display: inline; }
+  .sheet.open{ transform:none; }
+  .sheet-body{ padding:var(--sp-5); }
+  .sheet-logo{ left:var(--sp-5); max-width:64%; max-height:64px; }
 
-  /* una riga sola: i chip scorrono lateralmente, il conteggio resta fisso */
-  .quickbar{
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: 0 var(--sp-4) var(--sp-2);
-  }
-  .quickbar-chips{
-    flex: 1 1 auto;
-    min-width: 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    /* sfuma l'ultimo chip invece di tagliarlo di netto */
-    mask-image: linear-gradient(to right, #000 88%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
-  }
-  .quickbar-chips::-webkit-scrollbar{ display: none; }
-  .quickbar-chips .chip{ flex-shrink: 0; white-space: nowrap; padding: var(--sp-2) var(--sp-3); }
-  .quickbar-meta{ flex: 0 0 auto; margin-left: 0; }
-
-  .grid{
-    grid-template-columns: repeat(2, minmax(0,1fr));
-    gap: var(--sp-3);
-    padding: 0 var(--sp-4);
-    margin: var(--sp-5) auto var(--sp-16);
-  }
-  /* poster 258px + corpo 62px: valore vicino al reale, così le card
-     che entrano in viewport non cambiano altezza */
-  .card{ contain-intrinsic-size: auto 320px; border-radius: var(--r-md); }
-  .card-body{ padding: var(--sp-2) var(--sp-3) var(--sp-3); }
-  .skel-body{ padding: var(--sp-2) var(--sp-3) var(--sp-3); }
-  .poster-title{ right: 70px; bottom: var(--sp-2); font-size: var(--fs-caption); }
-  .poster .icon{ font-size: 34px; }
-  .badge{ font-size: 9px; padding: 2px 6px; }
-  /* bersagli da 32px: sotto i 30 diventano difficili da centrare col pollice */
-  .status-btn{ width: 32px; height: 32px; }
-  .status-btn .icon-svg{ width: 14px; height: 14px; }
-
-  .modal{ padding: var(--sp-6) var(--sp-5); border-radius: var(--r-lg); }
-  .modal-stat-row{ grid-template-columns: repeat(2, 1fr); }
-  .toast{ font-size: var(--fs-body-sm); padding: var(--sp-3) var(--sp-4); }
-  .scrolltop{ width: 44px; height: 44px; }
-
-  /* il pannello filtri sale dal basso: più raggiungibile col pollice */
-  .filter-panel-wrap{ align-items: flex-end; justify-content: center; }
-  .filter-sheet{
-    width: 100%;
-    height: 88vh;
-    height: 88dvh;
-    border-radius: var(--r-xl) var(--r-xl) 0 0;
-    box-shadow: 0 -.5px 0 var(--hairline), var(--e4);
-    transform: translateY(100%);
-  }
-  .filter-panel-wrap.open .filter-sheet{ transform: translateY(0); }
-  .filter-sheet-grab{
-    display: block;
-    position: absolute;
-    top: var(--sp-2); left: 50%;
-    transform: translateX(-50%);
-    width: 36px; height: 4px;
-    border-radius: var(--r-full);
-    background: rgba(255,255,255,.22);
-  }
-  .filter-sheet-head{ padding: var(--sp-6) var(--sp-5) var(--sp-4); }
-  .filter-panel{ padding: 0 var(--sp-5) var(--sp-4); }
-  .filter-sheet-foot{ padding: var(--sp-4) var(--sp-5) calc(var(--sp-4) + var(--sab)); }
-  .fgroup-opts.is-scroll{ max-height: none; overflow: visible; }
-  .fchip{ min-height: 38px; }
-
-  /* 16px è la soglia sotto cui iOS zooma automaticamente al focus */
-  .search-box input, select{ font-size: 16px; }
-
-  /* ---------- informativa ----------
-     Su schermo stretto testo e pulsante affiancati schiacciavano la
-     riga di testo in una colonna altissima, che usciva dallo schermo.
-     Qui diventano due blocchi impilati.
-     Ancoraggio con left/right invece di left:50% + translateX: così la
-     trasformazione resta solo verticale e non interferisce con il
-     posizionamento fisso. */
-  .consent{
-    left: var(--sp-4);
-    right: var(--sp-4);
-    bottom: calc(var(--sp-3) + var(--sab));
-    width: auto;
-    /* max-width esplicito oltre a left/right: sono ridondanti in teoria
-       (left+right già vincolano la larghezza), ma se un margine calcolato
-       da somme di variabili finisce per sforare di una frazione di pixel
-       su qualche telefono, il tetto esplicito lo impedisce comunque. */
-    max-width: calc(100% - var(--sp-4) * 2 - 4px);
-    max-height: 60vh;
-    overflow-y: auto;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--sp-3);
-    padding: var(--sp-4);
-    transform: translateY(calc(100% + var(--sp-8)));
-  }
-  .consent.show{ transform: translateY(0); }
-  .consent .btn{ width: 100%; justify-content: center; padding: var(--sp-3); }
-
-  /* i dialoghi legali occupano quasi tutto lo schermo */
-  .sheet-dialog{ max-height: 88vh; }
-  .sheet-dialog-head{ padding: var(--sp-5) var(--sp-5) var(--sp-3); }
-  .sheet-dialog-head .modal-close{ top: var(--sp-4); right: var(--sp-4); }
-  .sheet-dialog-body{ padding: var(--sp-4) var(--sp-5) var(--sp-5); }
-  .sheet-dialog-foot{ padding: var(--sp-3) var(--sp-5) calc(var(--sp-5) + var(--sab)); }
+  .modal{ padding:var(--sp-6); }
+  .consent{ flex-direction:column; align-items:stretch; gap:var(--sp-3); }
+  .scrolltop{ display:none; }
 }
 
-@media (max-width: 380px){
-  .grid{ gap: var(--sp-2); padding: 0 var(--sp-3); }
-  .stats{ padding: 0 var(--sp-3); }
+@media (max-width:380px){
+  .grid{ grid-template-columns:repeat(2, 1fr); }
+}
+
+/* ------------------------------------------------------------
+   PRESTAZIONI
+   La sfocatura è la cosa più cara dell'interfaccia. Su schermi
+   piccoli, dove la GPU è meno generosa e gli elementi sfocati
+   sono a tutta larghezza, si ripiega su fondi opachi: la resa
+   cambia poco, lo scorrimento cambia molto.
+   ------------------------------------------------------------ */
+@media (max-width:720px){
+  .tag,.pip,.act{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+  .tag{ background:rgba(6,6,8,.82); }
+  .act{ background:rgba(10,11,14,.9); }
+  .pip{ background:rgba(6,6,8,.8); }
+}
+
+/* Su un puntatore grosso (dito) gli stati di passaggio non
+   esistono: si evita che restino "attaccati" dopo un tap. */
+@media (hover:none){
+  .card:hover .frame{ transform:none; box-shadow:var(--e1); }
+  .card:hover .poster-img{ transform:scale(1.015); }
+  .frame:active{ transform:scale(.985); }
+}
+
+/* ------------------------------------------------------------
+   STAMPA
+   Chi stampa vuole l'elenco, non l'interfaccia.
+   ------------------------------------------------------------ */
+@media print{
+  .grain,.vignette,.command,.rail,.scrolltop,.consent,.acts,.sheet,.sheet-bg{ display:none !important; }
+  body{ background:#fff; color:#000; }
+  .grid{ grid-template-columns:repeat(4, 1fr); }
 }

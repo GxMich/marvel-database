@@ -23,15 +23,12 @@ function acknowledgeNotice(){
   setTimeout(() => consentBanner.remove(), 500);
 }
 
-/* ==========================================================
-   TEST DIAGNOSTICO — banner disattivato
-   Serve a isolare se l'overflow orizzontale segnalato su iPhone
-   dipende dal banner. Per riattivarlo: cambiare `true` in `false`.
-   ========================================================== */
-const DIAGNOSTIC_DISABLE_BANNER = true;
-
+/* Il banner era stato disattivato per capire se fosse lui a causare
+   l'overflow orizzontale su iPhone. Non era lui: il colpevole era una
+   decorazione della testata larga 120vw, poi rimossa. Il test è quindi
+   chiuso e l'informativa torna al suo posto. */
 function maybeShowNotice(){
-  if(!consentBanner || noticeAcknowledged() || DIAGNOSTIC_DISABLE_BANNER) {
+  if(!consentBanner || noticeAcknowledged()) {
     if(consentBanner) consentBanner.remove();
     return;
   }

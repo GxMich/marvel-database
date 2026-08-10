@@ -1,7 +1,15 @@
 /* ============================================================
    BUILD CATALOG
    Prende la tassonomia curata (master-list.mjs), la incrocia con
-   TMDB per i dati fattuali e scrive js/data/catalog.js.
+   TMDB per i dati fattuali e scrive DUE file:
+
+   - js/data/catalog.js  il minimo per disegnare la griglia e far
+                         funzionare ricerca, filtri e ordinamenti.
+                         Si carica all'avvio.
+   - js/data/details.js  trama, cast, regia, trailer, tagline, logo.
+                         Serve solo a chi apre una scheda, quindi
+                         viene caricato al primo click e non pesa
+                         sull'apertura della pagina.
 
    Uso:  node tools/build-catalog.mjs
    ============================================================ */
@@ -12,6 +20,7 @@ import { MASTER } from './master-list.mjs';
 const API_KEY = 'f48755194795d3e68c657d5262d7d17d';
 const BASE = 'https://api.themoviedb.org/3';
 const OUT = path.join(process.cwd(), 'js', 'data', 'catalog.js');
+const OUT_DETAILS = path.join(process.cwd(), 'js', 'data', 'details.js');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -132,7 +141,58 @@ function totalMinutes(isTv, details, seasonInfo, epRuntime, episodes) {
   return null;
 }
 
-const report = { ok: [], missing: [], yearMismatch: [], suspicious: [], noDuration: [] };
+/* ------------------------------------------------------------
+   ESTRAZIONE DEI DATI DI SCHEDA
+   Tutto quello che segue vive in details.js, non in catalog.js.
+   ------------------------------------------------------------ */
+
+/* Il trailer ufficiale, se c'è; altrimenti un trailer qualsiasi;
+   altrimenti il primo video YouTube (di solito una clip o un teaser).
+   `include_video_language` porta italiano e inglese in una sola
+   chiamata: chiedere le due lingue separatamente raddoppierebbe le
+   richieste per tutti i 184 titoli. */
+function pickTrailer(videos) {
+  const yt = (videos?.results || []).filter(v => v.site === 'YouTube' && v.key);
+  const best =
+    yt.find(v => v.type === 'Trailer' && v.official && v.iso_639_1 === 'it') ||
+    yt.find(v => v.type === 'Trailer' && v.official) ||
+    yt.find(v => v.type === 'Trailer') ||
+    yt.find(v => v.type === 'Teaser') ||
+    yt[0];
+  return best ? { key: best.key, name: best.name || null } : null;
+}
+
+/* Il logo del titolo: è quello che TMDB chiama "logo", cioè il
+   lettering del film su fondo trasparente. In testa alla scheda
+   dice il titolo meglio di qualunque font. */
+function pickLogo(images) {
+  const logos = (images?.logos || []).filter(l => l.file_path);
+  const best =
+    logos.filter(l => l.iso_639_1 === 'it').sort((a, b) => b.vote_average - a.vote_average)[0] ||
+    logos.filter(l => l.iso_639_1 === 'en').sort((a, b) => b.vote_average - a.vote_average)[0] ||
+    logos[0];
+  return best ? best.file_path : null;
+}
+
+function pickCast(credits) {
+  return (credits?.cast || []).slice(0, 10).map(c => ({
+    n: c.name,
+    c: c.character || null,
+    p: c.profile_path || null,
+  }));
+}
+
+function pickCrew(credits, details) {
+  const crew = credits?.crew || [];
+  const names = job => [...new Set(crew.filter(c => job.includes(c.job)).map(c => c.name))].slice(0, 3);
+  return {
+    directors: names(['Director']),
+    writers: names(['Screenplay', 'Writer', 'Story']),
+    creators: (details.created_by || []).map(c => c.name).slice(0, 3),
+  };
+}
+
+const report = { ok: [], missing: [], yearMismatch: [], suspicious: [], noDuration: [], noTrailer: [], noCast: [] };
 
 /* tmdbId della stagione 1 di ogni serie, per riusarlo nelle stagioni successive */
 const seriesIdByQuery = new Map();
@@ -173,7 +233,15 @@ async function resolve(entry) {
   if (!best) { report.missing.push(`${entry.q} (${entry.y})`); return null; }
   if (isTv && (!entry.s || entry.s === 1)) seriesIdByQuery.set(entry.q, best.id);
 
-  const details = await tmdb(`/${isTv ? 'tv' : 'movie'}/${best.id}`, { language: 'it-IT' });
+  /* Una sola chiamata porta anche cast, video e immagini: `append_to_response`
+     non costa richieste in più, e `include_video_language` evita di doverne
+     fare una seconda per i trailer in inglese. */
+  const details = await tmdb(`/${isTv ? 'tv' : 'movie'}/${best.id}`, {
+    language: 'it-IT',
+    append_to_response: 'credits,videos,images',
+    include_video_language: 'it,en,null',
+    include_image_language: 'it,en,null',
+  });
 
   // controllo di sanità: se il titolo risolto non somiglia a quello cercato
   // è probabile un aggancio sbagliato, va verificato a mano
@@ -200,10 +268,16 @@ async function resolve(entry) {
     } catch { /* la stagione può non esistere: si tiene il poster della serie */ }
   }
 
-  // in it-IT alcuni titoli non hanno poster: si ripiega sulla lingua originale
-  if (!poster) {
+  /* In it-IT alcuni titoli sono tradotti a metà: manca il poster, o la trama,
+     o la tagline. Si scarica una volta sola la versione in lingua originale e
+     si tappano i buchi — meglio una trama in inglese che una scheda vuota. */
+  let overview = details.overview || '';
+  let tagline = details.tagline || '';
+  if (!poster || !overview || !tagline) {
     const fallback = await tmdb(`/${isTv ? 'tv' : 'movie'}/${best.id}`, {});
-    poster = fallback.poster_path || null;
+    poster = poster || fallback.poster_path || null;
+    overview = overview || fallback.overview || '';
+    tagline = tagline || fallback.tagline || '';
   }
 
   const releaseDate = isTv ? details.first_air_date : details.release_date;
@@ -213,11 +287,21 @@ async function resolve(entry) {
   const episodes = seasonInfo ? seasonInfo.episodes : (isTv ? details.number_of_episodes || null : null);
   const minutes = totalMinutes(isTv, details, seasonInfo, epRuntime, episodes);
 
+  const id = slugify(`${entry.it || details.title || details.name}-${entry.y}${entry.s ? '-s' + entry.s : ''}`);
+  const trailer = pickTrailer(details.videos);
+  const cast = pickCast(details.credits);
+  const crew = pickCrew(details.credits, details);
+
   report.ok.push(entry.q);
   if (!minutes) report.noDuration.push(`${entry.q} (${entry.y})`);
+  if (!trailer) report.noTrailer.push(`${entry.q} (${entry.y})`);
+  if (!cast.length) report.noCast.push(`${entry.q} (${entry.y})`);
 
-  return {
-    id: slugify(`${entry.it || details.title || details.name}-${entry.y}${entry.s ? '-s' + entry.s : ''}`),
+  /* Il taglio fra i due file passa qui: in `light` sta solo ciò che serve
+     a disegnare una card e a farla trovare da ricerca, filtri e ordinamenti.
+     Tutto il resto è roba da scheda aperta, e viaggia in `detail`. */
+  const light = {
+    id,
     tmdbId: best.id,
     tmdbType: isTv ? 'tv' : 'movie',
     title: entry.it || details.title || details.name,
@@ -237,7 +321,6 @@ async function resolve(entry) {
     status: normalizeStatus(details.status, isTv, releaseDate),
     rating: details.vote_average ? Math.round(details.vote_average * 10) / 10 : null,
     votes: details.vote_count || 0,
-    overview: details.overview || '',
     // per i film è la durata del film, per le serie quella di un episodio
     runtime: isTv ? epRuntime : (details.runtime || null),
     totalMinutes: minutes,
@@ -245,12 +328,25 @@ async function resolve(entry) {
     episodes,
     season: entry.s || null,
     poster: poster || null,
-    backdrop: details.backdrop_path || null,
     platform: entry.pl || '',
     essential: !!entry.e,
     chronoOrder: entry.co ?? null,
     chronoLabel: entry.cl || null,
   };
+
+  const detail = {
+    overview,
+    tagline: tagline || null,
+    backdrop: details.backdrop_path || null,
+    logo: pickLogo(details.images),
+    trailer,
+    cast,
+    directors: crew.directors,
+    writers: crew.writers,
+    creators: crew.creators,
+  };
+
+  return { light, detail };
 }
 
 /* --- esecuzione con concorrenza limitata --- */
@@ -286,7 +382,9 @@ async function run() {
   await runPass(pass1);
   await runPass(pass2);
 
-  const catalog = out.filter(Boolean);
+  const resolved = out.filter(Boolean);
+  const catalog = resolved.map(r => r.light);
+  const details = Object.fromEntries(resolved.map(r => [r.light.id, r.detail]));
 
   // controllo duplicati
   const seen = new Map();
@@ -297,15 +395,37 @@ async function run() {
     else seen.set(key, `${c.title} (${c.year})`);
   });
 
+  const today = new Date().toISOString().slice(0, 10);
+
   const header = `/* ============================================================
    CATALOGO MARVEL — generato da tools/build-catalog.mjs
    NON modificare a mano: rigenera con \`node tools/build-catalog.mjs\`.
    Tassonomia curata in tools/master-list.mjs, dati fattuali da TMDB.
-   Generato il ${new Date().toISOString().slice(0, 10)} — ${catalog.length} titoli.
+   Generato il ${today} — ${catalog.length} titoli.
+
+   Qui sta solo ciò che serve alla griglia: trama, cast, regia,
+   trailer e logo stanno in details.js, che si carica alla prima
+   scheda aperta invece che all'avvio.
    ============================================================ */
 const CATALOG = `;
 
+  const detailsHeader = `/* ============================================================
+   SCHEDE — generato da tools/build-catalog.mjs
+   NON modificare a mano: rigenera con \`node tools/build-catalog.mjs\`.
+   Generato il ${today} — ${Object.keys(details).length} titoli.
+
+   Questo file NON è nell'HTML: lo carica js/details.js alla prima
+   apertura di una scheda. Tenerlo fuori dall'avvio è tutto il punto
+   della divisione — chi scorre soltanto la griglia non lo scarica.
+
+   Chiavi del cast abbreviate (n/c/p = nome/personaggio/foto) perché
+   sono 10 per titolo per 184 titoli: i nomi estesi peserebbero
+   qualche decina di KB in più senza aggiungere nulla.
+   ============================================================ */
+const DETAILS = `;
+
   fs.writeFileSync(OUT, header + JSON.stringify(catalog, null, 1) + ';\n', 'utf8');
+  fs.writeFileSync(OUT_DETAILS, detailsHeader + JSON.stringify(details) + ';\n', 'utf8');
 
   console.log(`\n\n=== RISULTATO ===`);
   console.log(`Risolti : ${catalog.length}/${MASTER.length}`);
@@ -313,6 +433,8 @@ const CATALOG = `;
   if (report.missing.length) console.log(`\nNON TROVATI (${report.missing.length}):\n  - ` + report.missing.join('\n  - '));
   if (report.yearMismatch.length) console.log(`\nDA VERIFICARE (${report.yearMismatch.length}):\n  - ` + report.yearMismatch.join('\n  - '));
   if (report.noDuration.length) console.log(`\nSENZA DURATA (${report.noDuration.length}) — escluse dal monte ore:\n  - ` + report.noDuration.join('\n  - '));
+  if (report.noTrailer.length) console.log(`\nSENZA TRAILER (${report.noTrailer.length}) — la scheda non mostra il pulsante:\n  - ` + report.noTrailer.join('\n  - '));
+  if (report.noCast.length) console.log(`\nSENZA CAST (${report.noCast.length}):\n  - ` + report.noCast.join('\n  - '));
 
   const byType = catalog.reduce((a, c) => { a[c.type] = (a[c.type] || 0) + 1; return a; }, {});
   const byUni = catalog.reduce((a, c) => { a[c.universe] = (a[c.universe] || 0) + 1; return a; }, {});
@@ -320,7 +442,9 @@ const CATALOG = `;
   console.log(`\nPer tipo:`, byType);
   console.log(`Per universo:`, byUni);
   console.log(`Senza poster: ${noPoster.length ? noPoster.join(', ') : 'nessuno'}`);
-  console.log(`\nScritto in ${OUT}`);
+  const kb = f => (fs.statSync(f).size / 1024).toFixed(0) + ' KB';
+  console.log(`\nScritto ${OUT} (${kb(OUT)}) — caricato all'avvio`);
+  console.log(`Scritto ${OUT_DETAILS} (${kb(OUT_DETAILS)}) — caricato alla prima scheda`);
 }
 
 run().catch(e => { console.error(e); process.exit(1); });
